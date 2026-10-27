@@ -1,0 +1,105 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import Faq from '../../components/Faq.astro';
+import Scene from '../../components/Scene.astro';
+import MonthStrip from '../../components/MonthStrip.astro';
+import SafariCta from '../../components/SafariCta.astro';
+import { comparisons, type Comparison } from '../../data/comparisons';
+import { countryBySlug } from '../../data/countries';
+import { passports } from '../../data/passports';
+import { destBySlug, MONTHS } from '../../data/seasons';
+import { costBySlug, fmt } from '../../data/costs';
+import { DATA_CHECKED } from '../../data/sources';
+import { rule, visaLabel, formatDate, countryPath, visaPath, malariaText } from '../../lib/visa';
+
+export function getStaticPaths() {
+  return comparisons.map((cmp) => ({ params: { slug: cmp.slug }, props: { cmp } }));
+}
+interface Props { cmp: Comparison }
+const { cmp } = Astro.props;
+const A = countryBySlug.get(cmp.a.country)!, B = countryBySlug.get(cmp.b.country)!;
+const dA = destBySlug.get(cmp.a.dest)!, dB = destBySlug.get(cmp.b.dest)!;
+const show = ['lithuania', 'united-kingdom', 'united-states'].map((s) => passports.find((p) => p.slug === s)!);
+const best = (d: typeof dA) => d.months.map((r, i) => (r === 2 ? MONTHS[i].slice(0, 3) : null)).filter(Boolean).join(', ');
+const topFee = (slug: string) => { const cc = costBySlug.get(slug); if (!cc) return '—'; const f = cc.fees[0]; return `${f.item}: ${fmt(f.amount, f.currency)} ${f.unit}`; };
+const yf = (c: typeof A) => (c.yellowFever === 'all' ? 'Required for all' : c.yellowFever === 'risk' ? 'Only if arriving from a risk country' : 'Not required');
+const rows = [
+  ...cmp.rows,
+  { label: 'Best months', a: best(dA), b: best(dB) },
+  ...show.map((p) => ({ label: `Visa, ${p.demonym}`, a: visaLabel[rule(A, p).type] + (rule(A, p).fee ? ` (${rule(A, p).fee})` : ''), b: visaLabel[rule(B, p).type] + (rule(B, p).fee ? ` (${rule(B, p).fee})` : '') })),
+  { label: 'Headline fee', a: topFee(A.slug), b: topFee(B.slug) },
+  { label: 'Yellow fever', a: yf(A), b: yf(B) },
+  { label: 'Main airports', a: A.airports.map((x) => x.code).join(' · '), b: B.airports.map((x) => x.code).join(' · ') },
+];
+const description = `${cmp.question} ${cmp.intro} Best months, visas, fees and who each one suits.`;
+const faq = [
+  { q: cmp.question, a: `${cmp.chooseA} ${cmp.chooseB}` },
+  { q: `When is the best time to visit ${cmp.a.label} and ${cmp.b.label}?`, a: `${cmp.a.label}: ${best(dA)}. ${cmp.b.label}: ${best(dB)}.` },
+  ...(cmp.combine ? [{ q: `Can I combine ${cmp.a.label} and ${cmp.b.label}?`, a: cmp.combine }] : []),
+];
+---
+<Base title={cmp.title} description={description} ogType="article">
+  <div class="wrap">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'Compare', href: '/compare/' }, { name: cmp.title, href: `/compare/${cmp.slug}/` }]} />
+      <p class="eyebrow">Comparison</p>
+      <h1 class="h1">{cmp.question}</h1>
+      <p class="lede">{cmp.intro}</p>
+      <p class="page-meta"><span>Last checked {formatDate(DATA_CHECKED)}</span></p>
+    </section>
+
+    <div class="vs">
+      <div><Scene scene={cmp.a.scene} compact /><h2 class="h2">{cmp.a.label}</h2><ul>{cmp.a.bestFor.map((x) => <li>{x}</li>)}</ul><MonthStrip d={dA} /></div>
+      <div><Scene scene={cmp.b.scene} compact /><h2 class="h2">{cmp.b.label}</h2><ul>{cmp.b.bestFor.map((x) => <li>{x}</li>)}</ul><MonthStrip d={dB} /></div>
+    </div>
+
+    <section class="section" style="margin-top:32px" aria-labelledby="side">
+      <h2 class="h2" id="side">Side by side</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col"></th><th scope="col">{cmp.a.label}</th><th scope="col">{cmp.b.label}</th></tr></thead>
+          <tbody>{rows.map((r) => <tr><td>{r.label}</td><td data-label={cmp.a.label}>{r.a}</td><td data-label={cmp.b.label}>{r.b}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section verdict" aria-labelledby="verdict">
+      <h2 class="h2" id="verdict">Our take</h2>
+      <div class="vgrid">
+        <p><b>{cmp.a.label}.</b>{' '}{cmp.chooseA}</p>
+        <p><b>{cmp.b.label}.</b>{' '}{cmp.chooseB}</p>
+      </div>
+      {cmp.combine && <p class="notice" style="margin-top:16px"><span aria-hidden="true">↔</span><span><b>Combine them.</b>{' '}{cmp.combine}</span></p>}
+    </section>
+
+    <section class="section prose">
+      <h2 class="h2">Health</h2>
+      <p><b>{A.name}:</b>{' '}{malariaText[A.malaria]}</p>
+      {A.slug !== B.slug && <p><b>{B.name}:</b>{' '}{malariaText[B.malaria]}</p>}
+    </section>
+
+    <section class="section">
+      <h2 class="h2">Entry rules for your passport</h2>
+      <ul class="chips">
+        {show.map((p) => <li><a href={visaPath(p, A)}>{A.name} for {p.demonym}s</a></li>)}
+        {A.slug !== B.slug && show.map((p) => <li><a href={visaPath(p, B)}>{B.name} for {p.demonym}s</a></li>)}
+        <li><a href={countryPath(A)}>All {A.name} rules</a></li>
+        {A.slug !== B.slug && <li><a href={countryPath(B)}>All {B.name} rules</a></li>}
+      </ul>
+    </section>
+
+    <Faq items={faq} />
+
+    <div style="max-width:520px;margin-top:28px"><SafariCta country={`${cmp.a.label} or ${cmp.b.label}`} slug={A.safari ? A.slug : B.slug} /></div>
+  </div>
+  <style>
+    .vs{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .vs>div{display:grid;gap:12px;align-content:start;min-width:0}
+    .vs h2{margin:6px 0 0}
+    .vs ul{margin:0;padding-left:20px;display:grid;gap:4px;color:var(--muted)}
+    .vgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .vgrid p{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+    @media (max-width:700px){.vs,.vgrid{grid-template-columns:1fr}}
+  </style>
+</Base>

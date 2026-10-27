@@ -16,7 +16,7 @@ Static Astro site served by Cloudflare Workers (static assets) with a small Work
 | D1 schema | `migrations/0001_leads.sql` |
 | Cloudflare konfigūracija | `wrangler.jsonc` |
 
-### Puslapiai (887 iš viso)
+### Puslapiai (917 iš viso)
 
 - `/` – pagrindinis su tikrintuvu ir animuotu bento bloku
 - `/countries/` ir `/countries/{šalis}/` – 54 šalių puslapiai
@@ -25,6 +25,10 @@ Static Astro site served by Cloudflare Workers (static assets) with a small Work
 - `/regions/{regionas}/` – 5 regionų puslapiai
 - `/health/yellow-fever/`, `/health/malaria/` – sveikatos suvestinės
 - `/guides/` – vadovai: taisyklių pakeitimai 2025–2026, East Africa Tourist Visa, KAZA UNIVISA, oficialūs vizų portalai
+- `/costs/` ir `/costs/{šalis}/` – oficialūs parkų mokesčiai, gorilų leidimai, vizos ir pavyzdinės kelionės suma (9 šalys, `src/data/costs.ts`)
+- `/compare/` ir `/compare/{pora}/` – 6 palyginimai (Kenya vs Tanzania ir kt., `src/data/comparisons.ts`)
+- `/when-to-go/` ir `/when-to-go/{mėnuo}/` – 12 mėnesių puslapių, 24 kryptys (`src/data/seasons.ts`)
+- Iliustracijos: originalūs SVG peizažai `src/components/Scene.astro` (8 scenos)
 - `/safari/` – užklausų forma (lead-gen) → D1 + Telegram pranešimas
 - `/llms.txt`, `/llms-full.txt`, `/data/visa-rules.json` – santraukos ir atviri duomenys AI paieškai (GEO)
 - `public/og.png` – socialinių tinklų paveikslėlis (`node scripts/og.mjs`)

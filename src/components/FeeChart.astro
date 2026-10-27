@@ -1,0 +1,29 @@
+---
+/* Horizontal bar chart of fees converted to US$, drawn to one scale. */
+interface Props { items: { label: string; usd: number; display: string }[]; title: string }
+const { items, title } = Astro.props;
+const max = Math.max(...items.map((i) => i.usd));
+---
+<figure class="feechart">
+  <figcaption>{title}</figcaption>
+  <ul>
+    {items.map((i) => (
+      <li>
+        <span class="lab">{i.label}</span>
+        <span class="bar"><span style={`width:${Math.max(1.5, (i.usd / max) * 100).toFixed(1)}%`}></span></span>
+        <span class="val mono">{i.display}</span>
+      </li>
+    ))}
+  </ul>
+</figure>
+<style>
+  .feechart{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .feechart figcaption{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+  .feechart ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+  .feechart li{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 150px;gap:12px;align-items:center;font-size:14px}
+  .feechart .lab{min-width:0}
+  .feechart .bar{height:10px;background:var(--bg);border-radius:999px;overflow:hidden}
+  .feechart .bar span{display:block;height:100%;background:var(--gold);border-radius:999px}
+  .feechart .val{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+  @media (max-width:560px){.feechart li{grid-template-columns:minmax(0,1fr) auto}.feechart .bar{grid-column:1/-1;grid-row:2}}
+</style>

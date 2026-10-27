@@ -1,0 +1,26 @@
+---
+import { MONTHS, monthSlug, type Destination } from '../data/seasons';
+interface Props { d: Destination; highlight?: number; link?: boolean }
+const { d, highlight, link = true } = Astro.props;
+const label = ['Avoid', 'Good', 'Best'];
+---
+<ol class="mstrip" aria-label={`Best months for ${d.name}`}>
+  {d.months.map((r, i) => {
+    const inner = <><span class="m">{MONTHS[i].slice(0, 1)}<span class="sr">{MONTHS[i].slice(1)}</span></span><span class="sr">: {label[r]}</span></>;
+    return (
+      <li class={`r${r} ${highlight === i ? 'hl' : ''}`} title={`${MONTHS[i]}: ${label[r]}`}>
+        {link ? <a href={`/when-to-go/${monthSlug(i)}/`}>{inner}</a> : inner}
+      </li>
+    );
+  })}
+</ol>
+<style>
+  .mstrip{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;list-style:none;margin:0;padding:0}
+  .mstrip li{border-radius:6px;text-align:center;font-family:var(--mono);font-size:11px;line-height:1;min-width:0}
+  .mstrip li a,.mstrip li>.m{display:block;padding:8px 0;text-decoration:none;color:inherit}
+  .mstrip .r2{background:var(--accent);color:var(--bg)}
+  .mstrip .r1{background:var(--accent-soft);color:var(--ink)}
+  .mstrip .r0{background:transparent;color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
+  .mstrip .hl{outline:2px solid var(--gold);outline-offset:1px}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>

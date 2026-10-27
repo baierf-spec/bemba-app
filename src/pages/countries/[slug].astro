@@ -6,6 +6,10 @@ import Notices from '../../components/Notices.astro';
 import Partners from '../../components/Partners.astro';
 import SafariCta from '../../components/SafariCta.astro';
 import Sources from '../../components/Sources.astro';
+import MonthStrip from '../../components/MonthStrip.astro';
+import { destinations } from '../../data/seasons';
+import { costBySlug } from '../../data/costs';
+import { comparisons } from '../../data/comparisons';
 import { countries } from '../../data/countries';
 import { passports } from '../../data/passports';
 import type { Country } from '../../data/types';
@@ -95,6 +99,17 @@ const nearby = relatedCountries(c, 8);
             <div class="fact"><dt>Main airports</dt><dd>{c.airports.map((a) => `${a.city} (${a.code})`).join(', ')}</dd></div>
           </dl>
         </section>
+
+        {(() => { const ds = destinations.filter((d) => d.country === c.slug); const cost = costBySlug.get(c.slug); const cmps = comparisons.filter((x) => x.a.country === c.slug || x.b.country === c.slug); return (ds.length || cost || cmps.length) ? (
+          <section class="section" aria-labelledby="plan-h">
+            <h2 class="h2" id="plan-h">Plan your trip</h2>
+            {ds.map((d) => <div style="margin-bottom:14px"><p style="margin:0 0 6px;font-weight:600">{d.name} <span style="font-weight:400;color:var(--muted)">· best months</span></p><MonthStrip d={d} /></div>)}
+            <ul class="chips" style="margin-top:12px">
+              {cost && <li><a href={`/costs/${c.slug}/`}>{c.name} park fees and costs</a></li>}
+              {cmps.map((x) => <li><a href={`/compare/${x.slug}/`}>{x.title}</a></li>)}
+              <li><a href="/when-to-go/">When to go, month by month</a></li>
+            </ul>
+          </section>) : null; })()}
 
         <section class="section prose" aria-labelledby="see-h">
           <h2 class="h2" id="see-h">Highlights of {c.name}</h2>

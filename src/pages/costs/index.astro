@@ -1,0 +1,35 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import FeeChart from '../../components/FeeChart.astro';
+import Scene from '../../components/Scene.astro';
+import { costs, fmt, toUsd } from '../../data/costs';
+import { countryBySlug } from '../../data/countries';
+import { DATA_CHECKED } from '../../data/sources';
+import { formatDate } from '../../lib/visa';
+const daily = costs.flatMap((cc) => cc.fees.filter((f) => /per person per (day|24 h)/.test(f.unit)).map((f) => ({ cc, f })))
+  .sort((a, b) => toUsd(b.f.amount, b.f.currency) - toUsd(a.f.amount, a.f.currency)).slice(0, 12);
+---
+<Base title="Safari costs in Africa: official park fees by country" description="Official park fees, gorilla permits and visas for Tanzania, Kenya, Rwanda, Uganda, Botswana, Namibia, South Africa, Zambia and Zimbabwe, with example trip totals.">
+  <div class="wrap">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'Costs', href: '/costs/' }]} />
+      <p class="eyebrow">Official fees · {costs.length} countries</p>
+      <h1 class="h1">What safaris cost in fees.</h1>
+      <p class="lede">Lodges and tours vary too much to quote. Park fees, permits and visas do not. Here is what each country charges, per person.</p>
+      <p class="page-meta"><span>Last checked {formatDate(DATA_CHECKED)}</span></p>
+    </section>
+    <Scene scene="savanna" compact />
+    <section class="section" style="margin-top:28px;border-top:0">
+      <h2 class="h2">Daily park fees compared</h2>
+      <FeeChart title="Per adult per day, in US$ at approximate rates" items={daily.map(({ cc, f }) => ({ label: `${countryBySlug.get(cc.slug)!.name}: ${f.item}`, usd: toUsd(f.amount, f.currency), display: f.currency === 'USD' ? fmt(f.amount, 'USD') : `${fmt(f.amount, f.currency)} ≈ US$${Math.round(toUsd(f.amount, f.currency))}` }))} />
+      <p style="color:var(--muted);font-size:14px;margin-top:10px">Gorilla permits are per trek, not per day: US$1,500 in Rwanda, US$800 in Uganda (US$1,000 from 1 January 2027).</p>
+    </section>
+    <section class="section">
+      <h2 class="h2">By country</h2>
+      <ul class="cards">
+        {costs.map((cc) => { const c = countryBySlug.get(cc.slug)!; return <li><a href={`/costs/${cc.slug}/`}><b>{c.name}</b><span>{cc.intro.split('. ')[0]}.</span></a></li>; })}
+      </ul>
+    </section>
+  </div>
+</Base>

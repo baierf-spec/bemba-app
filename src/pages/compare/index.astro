@@ -1,0 +1,31 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import Scene from '../../components/Scene.astro';
+import { comparisons } from '../../data/comparisons';
+---
+<Base title="Compare African destinations" description="Kenya or Tanzania, Rwanda or Uganda, Botswana or Namibia: side-by-side comparisons with best months, visas and official fees.">
+  <div class="wrap">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'Compare', href: '/compare/' }]} />
+      <h1 class="h1">Which one should I pick?</h1>
+      <p class="lede">Side-by-side comparisons of the choices travellers ask about most, with best months, visas and fees for your passport.</p>
+    </section>
+    <ul class="cmp-grid">
+      {comparisons.map((c) => (
+        <li><a href={`/compare/${c.slug}/`}>
+          <div class="pair"><Scene scene={c.a.scene} compact /><Scene scene={c.b.scene} compact /></div>
+          <b>{c.title}</b><span>{c.question}</span>
+        </a></li>
+      ))}
+    </ul>
+  </div>
+  <style>
+    .cmp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;list-style:none;margin:0;padding:0}
+    .cmp-grid a{display:grid;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 12px 16px;text-decoration:none}
+    .cmp-grid a:hover{border-color:var(--accent)}
+    .pair{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .cmp-grid b{font-family:var(--display);font-size:19px;letter-spacing:-.01em;padding:0 4px}
+    .cmp-grid span{color:var(--muted);font-size:14px;padding:0 4px}
+  </style>
+</Base>

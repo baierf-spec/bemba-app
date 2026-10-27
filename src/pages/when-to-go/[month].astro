@@ -1,0 +1,91 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import Faq from '../../components/Faq.astro';
+import Scene from '../../components/Scene.astro';
+import MonthStrip from '../../components/MonthStrip.astro';
+import { destinations, MONTHS, monthSlug } from '../../data/seasons';
+import { countryBySlug } from '../../data/countries';
+import { countryPath } from '../../lib/visa';
+import { site } from '../../config/site';
+
+export function getStaticPaths() {
+  return MONTHS.map((_, i) => ({ params: { month: monthSlug(i) }, props: { i } }));
+}
+interface Props { i: number }
+const { i } = Astro.props;
+const M = MONTHS[i];
+const best = destinations.filter((d) => d.months[i] === 2);
+const good = destinations.filter((d) => d.months[i] === 1);
+const avoid = destinations.filter((d) => d.months[i] === 0);
+const events = destinations.filter((d) => d.notes[i + 1]);
+const prev = (i + 11) % 12, next = (i + 1) % 12;
+const hero = (events[0] ?? best[0] ?? destinations[0]).scene;
+const title = `Where to go in Africa in ${M}`;
+const description = `The best places in Africa in ${M}: ${best.slice(0, 5).map((d) => d.name).join(', ')}${best.length > 5 ? ' and more' : ''}. What is happening that month and where to avoid.`;
+const faq = [
+  { q: `Where is best to go in Africa in ${M}?`, a: best.length ? `${best.map((d) => d.name).join(', ')}.` : 'Shoulder-season destinations listed on this page.' },
+  { q: `Where should I avoid in ${M}?`, a: avoid.length ? avoid.map((d) => `${d.name}${d.avoidWhy ? ` (${d.avoidWhy.toLowerCase().replace(/\.$/, '')})` : ''}`).join('; ') + '.' : `None of the destinations we track are off-limits in ${M}.` },
+];
+const itemList = { '@context': 'https://schema.org', '@type': 'ItemList', name: title, itemListElement: best.map((d, k) => ({ '@type': 'ListItem', position: k + 1, name: d.name, url: new URL(countryPath(countryBySlug.get(d.country)!), site.url).href })) };
+---
+<Base title={title} description={description} jsonLd={[itemList]}>
+  <div class="wrap">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'When to go', href: '/when-to-go/' }, { name: M, href: `/when-to-go/${monthSlug(i)}/` }]} />
+      <p class="eyebrow">Africa in {M}</p>
+      <h1 class="h1">Where to go in {M}.</h1>
+      <p class="lede">{best.length} destinations are at their best in {M}, {good.length} are good, and {avoid.length} are better left for another month.</p>
+      <nav class="mnav-months" aria-label="Months"><a href={`/when-to-go/${monthSlug(prev)}/`}>← {MONTHS[prev]}</a><a href="/when-to-go/">All months</a><a href={`/when-to-go/${monthSlug(next)}/`}>{MONTHS[next]} →</a></nav>
+    </section>
+    <Scene scene={hero} compact />
+
+    {events.length > 0 && (
+      <section class="section" style="margin-top:28px;border-top:0">
+        <h2 class="h2">What happens in {M}</h2>
+        <ul class="events">{events.map((d) => <li><b>{d.name}</b><span>{d.notes[i + 1]}</span></li>)}</ul>
+      </section>
+    )}
+
+    <section class="section">
+      <h2 class="h2">Best in {M}</h2>
+      <ul class="dests">
+        {best.map((d) => { const c = countryBySlug.get(d.country)!; return (
+          <li>
+            <div class="dh"><a href={countryPath(c)}><b>{d.name}</b></a><span class="pill s-free">{d.kind}</span></div>
+            <span class="mono" style="font-size:12px;color:var(--muted)">{c.name}</span>
+            <MonthStrip d={d} highlight={i} />
+          </li>
+        ); })}
+      </ul>
+    </section>
+
+    {good.length > 0 && (
+      <section class="section">
+        <h2 class="h2">Also good</h2>
+        <ul class="chips">{good.map((d) => <li><a href={countryPath(countryBySlug.get(d.country)!)}>{d.name}</a></li>)}</ul>
+      </section>
+    )}
+
+    {avoid.length > 0 && (
+      <section class="section">
+        <h2 class="h2">Better another month</h2>
+        <ul class="events">{avoid.map((d) => <li><b>{d.name}</b><span>{d.avoidWhy ?? 'Off season.'}</span></li>)}</ul>
+      </section>
+    )}
+
+    <Faq items={faq} />
+    <p style="color:var(--muted);font-size:14px;margin-top:16px">Based on long-term climate patterns and wildlife cycles. Weather varies year to year.</p>
+  </div>
+  <style>
+    .mnav-months{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;font-size:14px}
+    .events{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+    .events li{display:grid;grid-template-columns:220px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+    .events span{color:var(--muted)}
+    .dests{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+    .dests li{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:8px;min-width:0}
+    .dh{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .dh a{text-decoration:none}
+    @media (max-width:600px){.events li{grid-template-columns:1fr;gap:2px}}
+  </style>
+</Base>

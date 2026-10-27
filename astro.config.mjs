@@ -17,7 +17,7 @@ export default defineConfig({
         item.lastmod = DATA_CHECKED;
         item.changefreq = 'weekly';
         item.priority = u === 'https://bemba.com/' ? 1.0
-          : /\/(countries|regions|guides|health)\//.test(u) ? 0.8
+          : /\/(countries|regions|guides|health|costs|compare|when-to-go)\//.test(u) ? 0.8
           : /\/visa\/[^/]+\/[^/]+\/$/.test(u) ? 0.6 : 0.7;
         return item;
       },

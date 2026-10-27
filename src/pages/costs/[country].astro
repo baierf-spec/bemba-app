@@ -1,0 +1,99 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import Faq from '../../components/Faq.astro';
+import Scene from '../../components/Scene.astro';
+import FeeChart from '../../components/FeeChart.astro';
+import SafariCta from '../../components/SafariCta.astro';
+import Partners from '../../components/Partners.astro';
+import { costs, fmt, toUsd, exampleTotal, type CostCountry } from '../../data/costs';
+import { countryBySlug } from '../../data/countries';
+import { DATA_CHECKED } from '../../data/sources';
+import { formatDate, countryPath } from '../../lib/visa';
+
+export function getStaticPaths() {
+  return costs.map((c) => ({ params: { country: c.slug }, props: { cc: c } }));
+}
+interface Props { cc: CostCountry }
+const { cc } = Astro.props;
+const c = countryBySlug.get(cc.slug)!;
+const total = exampleTotal(cc);
+const totalUsd = toUsd(total, cc.example.currency);
+const title = `${c.name} safari costs: park fees, permits and visa`;
+const description = `Official ${c.name} fees for ${new Date(DATA_CHECKED).getFullYear()}: ${cc.fees.slice(0, 3).map((f) => `${f.item} ${fmt(f.amount, f.currency)}`).join(', ')}. With an example trip total.`;
+const top = [...cc.fees].sort((a, b) => toUsd(b.amount, b.currency) - toUsd(a.amount, a.currency));
+const faq = [
+  { q: `How much are park fees in ${c.name}?`, a: cc.fees.filter((f) => !/visa|eTA|UNIVISA|Authorisation/i.test(f.item)).map((f) => `${f.item}: ${fmt(f.amount, f.currency)} ${f.unit}`).join('; ') + '.' },
+  { q: `What do official fees add up to on a typical trip?`, a: `For a ${cc.example.title.toLowerCase()}, the official fees come to about ${fmt(Math.round(total * 100) / 100, cc.example.currency)}${cc.example.currency !== 'USD' ? ` (about US$${Math.round(totalUsd)})` : ''} per adult. ${cc.example.assumptions}` },
+  { q: `Are park fees included in safari prices?`, a: 'Most guided safaris include park fees in the quoted price, but always check. Self-drive travellers pay at the gate or online before arrival.' },
+];
+---
+<Base title={title} description={description} ogType="article">
+  <div class="wrap">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'Costs', href: '/costs/' }, { name: c.name, href: `/costs/${c.slug}/` }]} />
+      <p class="eyebrow">Official fees · {c.name}</p>
+      <h1 class="h1">{c.name} safari costs.</h1>
+      <p class="lede">{cc.intro}</p>
+      <p class="page-meta"><span>Last checked {formatDate(DATA_CHECKED)}</span><span>Fees for foreign non-resident adults</span></p>
+    </section>
+    <Scene scene={cc.scene} compact />
+    <div class="article" style="margin-top:28px">
+      <div>
+        <section aria-labelledby="fees">
+          <h2 class="h2" id="fees">Official fees</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th scope="col">Fee</th><th scope="col">Amount</th><th scope="col">Charged</th></tr></thead>
+              <tbody>
+                {cc.fees.map((f) => (
+                  <tr>
+                    <td>{f.item}{f.note && <span style="display:block;color:var(--muted);font-size:13px;font-weight:400">{f.note}</span>}</td>
+                    <td data-label="Entry" class="mono">{fmt(f.amount, f.currency)}</td>
+                    <td data-label="Charged">{f.unit}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" style="margin-top:28px" aria-labelledby="chart">
+          <h2 class="h2" id="chart">Biggest fees at a glance</h2>
+          <FeeChart title="Converted to US$ at approximate rates" items={top.map((f) => ({ label: f.item, usd: toUsd(f.amount, f.currency), display: f.currency === 'USD' ? fmt(f.amount, 'USD') : `≈ US$${Math.round(toUsd(f.amount, f.currency))}` }))} />
+        </section>
+
+        <section class="section" aria-labelledby="example">
+          <h2 class="h2" id="example">Example: {cc.example.title}</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th scope="col">Item</th><th scope="col">Per adult</th></tr></thead>
+              <tbody>
+                {cc.example.lines.map((l) => <tr><td>{l.label}</td><td data-label="Entry" class="mono">{fmt(Math.round(((l.fee * l.qty) / (l.divide ?? 1)) * 100) / 100, cc.example.currency)}</td></tr>)}
+                <tr><td><b>Total official fees</b></td><td data-label="Entry" class="mono"><b>{fmt(Math.round(total * 100) / 100, cc.example.currency)}</b>{cc.example.currency !== 'USD' && <span style="color:var(--muted)"> ≈ US${Math.round(totalUsd)}</span>}</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="color:var(--muted);font-size:14px;margin-top:10px">{cc.example.assumptions}</p>
+        </section>
+
+        <section class="section prose">
+          <h2 class="h2">Entry rules</h2>
+          <p>Visa, yellow fever and arrival details for every passport are on the <a href={countryPath(c)}>{c.name} entry requirements</a> page.</p>
+        </section>
+
+        <Faq items={faq} />
+
+        <section class="section" id="sources">
+          <h2 class="h2">Sources</h2>
+          <ul class="sources">{cc.sources.map((s) => <li><a href={s.url} rel="noopener" target="_blank">{s.label}</a></li>)}</ul>
+          <p style="color:var(--muted);font-size:14px;margin-top:12px">Fees change, sometimes mid-year. Confirm with the park authority or your operator before you pay. Currency conversions are approximate.</p>
+        </section>
+      </div>
+      <aside class="aside">
+        <SafariCta country={c.name} slug={c.slug} />
+        <Partners country={c.name} only={['insurance']} />
+      </aside>
+    </div>
+  </div>
+</Base>
