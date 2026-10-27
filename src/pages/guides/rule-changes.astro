@@ -1,0 +1,45 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import { DATA_CHECKED } from '../../data/sources';
+import { formatDate } from '../../lib/visa';
+const changes = [
+  { date: '2026-07-20', country: 'Ethiopia', slug: 'ethiopia', text: 'New tourist eVisa fees published: US$62 for 30 days, US$152 for 90 days.', src: 'https://www.legit.ng/people/1720329-ethiopia-announces-tourist-visa-fees-displays-cost-30-day-90-day-extensions/' },
+  { date: '2026-02-16', country: 'Madagascar', slug: 'madagascar', text: 'The 15-day eVisa rose from €10 to €30. Longer visas kept their prices.', src: 'https://nairametrics.com/2026/02/18/madagascar-increases-15%e2%80%91day-tourist-e%e2%80%91visa-fee-to-e30/' },
+  { date: '2026-01-03', country: 'Malawi', slug: 'malawi', text: 'Visa-free entry ended for most previously exempt countries, including the EU, UK and US.', src: 'https://www.buch-dein-visum.de/en/news/malawi/malawi-verschaerft-seine-politik-der-visumfreiheit' },
+  { date: '2026-01-01', country: 'Gabon', slug: 'gabon', text: 'Visa issuance to US citizens suspended in response to US restrictions.', src: 'https://travel.state.gov/content/passports/en/country/gabon.html' },
+  { date: '2025-12-31', country: 'Mali, Burkina Faso, Niger', slug: 'mali', text: 'Entry refused to US citizens as a reciprocal measure.', src: 'https://www.aljazeera.com/news/2025/12/31/mali-burkina-faso-ban-us-citizens-in-response-to-trump-travel-bans' },
+  { date: '2025-06-05', country: 'Chad', slug: 'chad', text: 'Visa issuance to US citizens suspended.', src: 'https://www.arabnews.com/node/2603819/world' },
+  { date: '2025-04-01', country: 'Namibia', slug: 'namibia', text: 'Visa on arrival (N$1,600) introduced for EU, UK, US and other previously exempt countries.', src: 'https://cibtvisas.com/blog/nambia-new-online-visa-application' },
+  { date: '2025-01-05', country: 'Mauritania', slug: 'mauritania', text: 'The eVisa must now be obtained before boarding or crossing a land border.', src: 'https://en.wikipedia.org/wiki/Visa_requirements_for_Swedish_citizens' },
+];
+const title = 'Africa visa rule changes 2025–2026';
+const description = 'Recent changes to entry rules in Africa: Malawi ends visa-free entry, Namibia introduces visas, new fees in Ethiopia and Madagascar, and suspensions for US citizens.';
+---
+<Base title={title} description={description} ogType="article">
+  <div class="wrap narrow">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'Guides', href: '/guides/' }, { name: 'Rule changes', href: '/guides/rule-changes/' }]} />
+      <p class="eyebrow">Changelog</p>
+      <h1 class="h1">What changed in 2025 and 2026.</h1>
+      <p class="lede">Entry rules we updated after official announcements and news reports, newest first.</p>
+      <p class="page-meta"><span>Last checked {formatDate(DATA_CHECKED)}</span></p>
+    </section>
+    <ol class="changes">
+      {changes.map((c) => (
+        <li>
+          <time datetime={c.date} class="mono">{formatDate(c.date)}</time>
+          <div><b><a href={`/countries/${c.slug}/`}>{c.country}</a></b><p>{c.text} <a href={c.src} rel="noopener" target="_blank">Source</a></p></div>
+        </li>
+      ))}
+    </ol>
+  </div>
+  <style>
+    .changes{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+    .changes li{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}
+    .changes time{font-size:13px;color:var(--muted);padding-top:2px}
+    .changes p{margin:4px 0 0;color:var(--muted)}
+    .changes b a{text-decoration:none}
+    @media (max-width:560px){.changes li{grid-template-columns:1fr;gap:4px}}
+  </style>
+</Base>

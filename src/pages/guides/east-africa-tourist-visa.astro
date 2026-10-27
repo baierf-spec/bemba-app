@@ -1,0 +1,51 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import Faq from '../../components/Faq.astro';
+import { DATA_CHECKED } from '../../data/sources';
+import { formatDate } from '../../lib/visa';
+const title = 'East Africa Tourist Visa: Kenya, Uganda and Rwanda on one visa';
+const description = 'The East Africa Tourist Visa costs US$100 and covers Kenya, Uganda and Rwanda for 90 days with multiple entries. Who it suits, how to apply and how it compares with separate visas.';
+const faq = [
+  { q: 'How much is the East Africa Tourist Visa?', a: 'US$100. It is valid for 90 days and allows multiple entries between Kenya, Uganda and Rwanda.' },
+  { q: 'Does it cover Tanzania?', a: 'No. Tanzania is not part of the scheme, so a Kenya and Tanzania safari still needs a separate Tanzania eVisa.' },
+  { q: 'Where do I apply?', a: 'Through the immigration portal of the country you enter first: Uganda, Rwanda or Kenya. Your first entry must be into that country.' },
+  { q: 'Is it cheaper than separate visas?', a: 'For Uganda (US$50) plus Rwanda (US$50) plus Kenya (eTA about US$32.50), it saves a little and removes two applications. For two countries only, compare prices first.' },
+];
+---
+<Base title={title} description={description} ogType="article">
+  <div class="wrap narrow">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'Guides', href: '/guides/' }, { name: 'East Africa Tourist Visa', href: '/guides/east-africa-tourist-visa/' }]} />
+      <p class="eyebrow">Guide · Kenya · Uganda · Rwanda</p>
+      <h1 class="h1">East Africa Tourist Visa.</h1>
+      <p class="lede">One visa, US$100, 90 days and multiple entries across Kenya, Uganda and Rwanda. It suits gorilla treks combined with a Masai Mara safari.</p>
+      <p class="page-meta"><span>Last checked {formatDate(DATA_CHECKED)}</span></p>
+    </section>
+    <dl class="fact-grid" style="margin-bottom:24px">
+      <div class="fact"><dt>Fee</dt><dd>US$100</dd></div>
+      <div class="fact"><dt>Valid</dt><dd>90 days</dd></div>
+      <div class="fact"><dt>Entries</dt><dd>Multiple, within the 3 countries</dd></div>
+      <div class="fact"><dt>Not included</dt><dd>Tanzania</dd></div>
+    </dl>
+    <div class="prose">
+      <h2 class="h2">How to apply</h2>
+      <ol>
+        <li>Decide which country you will enter first. You apply through that country and must arrive there first.</li>
+        <li>Apply online on the official portal: <a href="https://visas.immigration.go.ug" rel="noopener" target="_blank">Uganda</a>, <a href="https://irembo.gov.rw" rel="noopener" target="_blank">Rwanda</a> or <a href="https://www.etakenya.go.ke" rel="noopener" target="_blank">Kenya</a>.</li>
+        <li>Upload your passport, photo and itinerary, pay US$100 and carry the approval with you.</li>
+        <li>Leaving the three-country area (for example to Tanzania) usually ends the visa.</li>
+      </ol>
+      <h2 class="h2">Separate visas instead</h2>
+      <p>See the single-country rules for your passport: <a href="/countries/kenya/">Kenya</a>, <a href="/countries/uganda/">Uganda</a>, <a href="/countries/rwanda/">Rwanda</a>. British citizens get Rwanda free as Commonwealth citizens, which makes separate visas cheaper.</p>
+    </div>
+    <Faq items={faq} />
+    <section class="section" id="sources">
+      <h2 class="h2">Sources</h2>
+      <ul class="sources">
+        <li><a href="https://www.visaverge.com/questions/ultimate-guide-how-to-get-a-visa-for-uganda/" rel="noopener" target="_blank">VisaVerge: Uganda visa guide 2026 (EATV fee)</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Visa_requirements_for_British_citizens" rel="noopener" target="_blank">Wikipedia: Visa requirements for British citizens</a></li>
+      </ul>
+    </section>
+  </div>
+</Base>

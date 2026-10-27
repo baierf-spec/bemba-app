@@ -1,0 +1,44 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import Faq from '../../components/Faq.astro';
+import { DATA_CHECKED } from '../../data/sources';
+import { formatDate } from '../../lib/visa';
+const title = 'KAZA UNIVISA: Victoria Falls on both sides with one visa';
+const description = 'The KAZA UNIVISA costs about US$50 and covers Zambia and Zimbabwe for 30 days, plus day trips to Botswana through Kazungula. Who needs it and how to get it.';
+const faq = [
+  { q: 'Do I need the KAZA visa if I am visa-free in Zambia?', a: 'Only if you also visit Zimbabwe. EU, UK and US citizens are visa-free in Zambia, so the UNIVISA mainly saves the separate Zimbabwe visa and lets you cross the bridge at Victoria Falls freely.' },
+  { q: 'How much does it cost?', a: 'About US$50 for 30 days. Confirm the price at the border, as it has changed before.' },
+  { q: 'Where can I get it?', a: 'On arrival at Victoria Falls and Livingstone airports, at main airports in Lusaka and Harare, and at the Victoria Falls and Kazungula land borders.' },
+];
+---
+<Base title={title} description={description} ogType="article">
+  <div class="wrap narrow">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'Guides', href: '/guides/' }, { name: 'KAZA UNIVISA', href: '/guides/kaza-univisa/' }]} />
+      <p class="eyebrow">Guide · Zambia · Zimbabwe</p>
+      <h1 class="h1">KAZA UNIVISA.</h1>
+      <p class="lede">One visa for Zambia and Zimbabwe, for travellers who want to see Victoria Falls from both sides and cross the bridge without new paperwork.</p>
+      <p class="page-meta"><span>Last checked {formatDate(DATA_CHECKED)}</span></p>
+    </section>
+    <dl class="fact-grid" style="margin-bottom:24px">
+      <div class="fact"><dt>Fee</dt><dd>About US$50</dd></div>
+      <div class="fact"><dt>Valid</dt><dd>30 days</dd></div>
+      <div class="fact"><dt>Covers</dt><dd>Zambia, Zimbabwe, Botswana day trips via Kazungula</dd></div>
+    </dl>
+    <div class="prose">
+      <h2 class="h2">Is it worth it?</h2>
+      <p>If you only visit Zambia, no: EU, UK and US citizens are visa-free there. If you stay in Zimbabwe and pop over to Zambia, or plan several crossings, one UNIVISA is simpler than a Zimbabwe visa plus re-entry checks.</p>
+      <h2 class="h2">Entry rules for each country</h2>
+      <p><a href="/countries/zambia/">Zambia</a> · <a href="/countries/zimbabwe/">Zimbabwe</a> · <a href="/countries/botswana/">Botswana</a></p>
+    </div>
+    <Faq items={faq} />
+    <section class="section" id="sources">
+      <h2 class="h2">Sources</h2>
+      <ul class="sources">
+        <li><a href="https://safarifind.com/blog/do-british-citizens-need-a-zimbabwe-visa-in-2026" rel="noopener" target="_blank">SafariFind: Zimbabwe visa for British citizens 2026</a></li>
+        <li><a href="https://www.evisa.gov.zw" rel="noopener" target="_blank">Zimbabwe official eVisa portal</a></li>
+      </ul>
+    </section>
+  </div>
+</Base>

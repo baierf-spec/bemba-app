@@ -209,6 +209,24 @@ const ld = [
     <div class="wrap">
       <div class="sec-head">
         <div>
+          <p class="eyebrow">Guides</p>
+          <h2>Before you book.</h2>
+        </div>
+        <p><a href="/guides/">All guides →</a></p>
+      </div>
+      <ul class="cards">
+        <li><a href="/guides/rule-changes/"><b>What changed in 2025–2026</b><span>Malawi, Namibia, new fees and US suspensions.</span></a></li>
+        <li><a href="/health/yellow-fever/"><b>Yellow fever certificates</b><span>Countries that ask every traveller for the yellow card.</span></a></li>
+        <li><a href="/guides/east-africa-tourist-visa/"><b>East Africa Tourist Visa</b><span>Kenya, Uganda and Rwanda on one US$100 visa.</span></a></li>
+        <li><a href="/guides/official-visa-portals/"><b>Official visa portals</b><span>Avoid agency mark-ups on eVisas.</span></a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="index">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
           <p class="eyebrow">Safari countries</p>
           <h2>Where most trips start.</h2>
         </div>
@@ -238,7 +256,7 @@ const ld = [
     .passport{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:26px;position:relative;overflow:hidden;box-shadow:0 24px 60px -30px rgba(10,40,30,.35)}
     .passport::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 14px,var(--accent-soft) 14px 15px);opacity:.45;pointer-events:none}
     .passport>*{position:relative}
-    .pp-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px dashed var(--line);padding-bottom:14px;margin-bottom:18px}
+    .pp-head{display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:space-between;align-items:baseline;border-bottom:1px dashed var(--line);padding-bottom:14px;margin-bottom:18px}
     .pp-head h2{font-family:var(--display);font-size:22px;margin:0;letter-spacing:-.01em}
     .fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .passport .field select{font-weight:500}
@@ -256,7 +274,7 @@ const ld = [
     .card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:18px;overflow:hidden;min-width:0;box-shadow:0 18px 40px -32px rgba(10,40,30,.4)}
     .card h3{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:-.02em;line-height:1.1;margin:6px 0 6px;text-wrap:balance}
     .card .desc{margin:0;color:var(--muted);font-size:15px;max-width:44ch}
-    .c-check{grid-column:1/3;grid-row:1}.c-map{grid-column:3;grid-row:1/3}.c-vax{grid-column:1;grid-row:2}.c-safari{grid-column:2;grid-row:2}
+    .c-check{grid-column:1/3;grid-row:1}.c-map{grid-column:3;grid-row:1/3;justify-content:space-between}.c-map .vis{margin-top:0}.c-vax{grid-column:1;grid-row:2}.c-safari{grid-column:2;grid-row:2}
     .vis{margin-top:auto;min-width:0}
     @media (max-width:960px){.grid{grid-template-columns:1fr 1fr}.c-check{grid-column:1/3;grid-row:auto}.c-map{grid-column:1;grid-row:auto}.c-vax{grid-column:2;grid-row:auto}.c-safari{grid-column:1/3;grid-row:auto}}
     @media (max-width:640px){.grid{grid-template-columns:1fr}.c-check,.c-map,.c-vax,.c-safari{grid-column:auto}}
@@ -291,6 +309,7 @@ const ld = [
     .counter{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:13px;border-top:1px dashed var(--line);padding-top:12px}
     .counter b{font-weight:500;font-variant-numeric:tabular-nums;color:var(--accent)}
     .tl svg{width:100%;height:auto;display:block;overflow:visible}
+    .c-vax .vis{margin-top:auto;margin-bottom:auto}
     .stack{position:relative;height:208px;overflow:hidden;border-radius:12px}
     .req{position:absolute;left:0;right:0;top:0;height:60px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 12px;will-change:transform,opacity,filter}
     .req b{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

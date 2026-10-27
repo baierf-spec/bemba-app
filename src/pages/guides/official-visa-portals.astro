@@ -1,0 +1,38 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import { countries } from '../../data/countries';
+import { DATA_CHECKED } from '../../data/sources';
+import { countryPath, formatDate } from '../../lib/visa';
+const list = countries.filter((c) => c.portal).sort((a, b) => a.name.localeCompare(b.name));
+const title = 'Official eVisa portals for African countries';
+const description = `Government visa and eVisa websites for ${list.length} African countries, so you pay the official fee and not an agency mark-up.`;
+const host = (u: string) => new URL(u).hostname.replace(/^www\./, '');
+---
+<Base title={title} description={description}>
+  <div class="wrap narrow">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'Guides', href: '/guides/' }, { name: 'Official visa portals', href: '/guides/official-visa-portals/' }]} />
+      <p class="eyebrow">Guide · {list.length} portals</p>
+      <h1 class="h1">Official visa portals.</h1>
+      <p class="lede">Search results for "eVisa" are full of look-alike agency sites that charge two or three times the official fee. These are the government portals.</p>
+      <p class="page-meta"><span>Last checked {formatDate(DATA_CHECKED)}</span></p>
+    </section>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Country</th><th scope="col">Official portal</th></tr></thead>
+        <tbody>
+          {list.map((c) => <tr><td><a href={countryPath(c)}>{c.name}</a></td><td class="mono"><a href={c.portal} rel="noopener" target="_blank">{host(c.portal!)}</a></td></tr>)}
+        </tbody>
+      </table>
+    </div>
+    <div class="prose" style="margin-top:28px">
+      <h2 class="h2">How to spot a fake visa site</h2>
+      <ul>
+        <li>Government portals usually end in the country's official domain, such as .go.ke, .go.tz, .gov.et or .gov.rw.</li>
+        <li>The fee shown before payment matches the official fee on our country page. A "service fee" on top is a sign of an agency.</li>
+        <li>Agencies are not illegal, but you do not need one for a standard tourist eVisa.</li>
+      </ul>
+    </div>
+  </div>
+</Base>

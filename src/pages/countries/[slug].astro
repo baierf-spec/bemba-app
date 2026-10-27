@@ -9,7 +9,7 @@ import Sources from '../../components/Sources.astro';
 import { countries } from '../../data/countries';
 import { passports } from '../../data/passports';
 import type { Country } from '../../data/types';
-import { visaLabel, stampClass, yellowFeverText, malariaText, relatedCountries, visaPath, countryPath, rule, sourcesFor } from '../../lib/visa';
+import { visaLabel, stampClass, yellowFeverText, malariaText, relatedCountries, visaPath, countryPath, rule, sourcesFor, groupedRules, passportName, formatDate } from '../../lib/visa';
 
 export function getStaticPaths() {
   return countries.map((c) => ({ params: { slug: c.slug }, props: { c } }));
@@ -31,7 +31,12 @@ const faq = [
 const ld = {
   '@context': 'https://schema.org', '@type': 'Article', headline: title, description,
   about: { '@type': 'Country', name: c.name },
-  publisher: { '@type': 'Organization', name: 'Bemba', url: 'https://bemba.com' },
+  dateModified: c.checkedAt,
+  publisher: { '@type': 'Organization', name: 'Bemba', url: 'https://bemba.com', logo: { '@type': 'ImageObject', url: 'https://bemba.com/og.png' } },
+  author: { '@type': 'Organization', name: 'Bemba', url: 'https://bemba.com/about/' },
+  image: 'https://bemba.com/og.png',
+  inLanguage: 'en',
+  mainEntityOfPage: new URL(Astro.url.pathname, 'https://bemba.com').href,
 };
 const nearby = relatedCountries(c, 8);
 ---
@@ -42,6 +47,7 @@ const nearby = relatedCountries(c, 8);
       <p class="eyebrow">{c.region} · {c.iso2} · {c.airports.map((a) => a.code).join(' · ')}</p>
       <h1 class="h1">{c.name} entry requirements</h1>
       <p class="lede">What you need to enter {c.name}: visa rules by passport, vaccines, arrival airports and practical details for your trip.</p>
+      <p class="page-meta"><span>Last checked {formatDate(c.checkedAt!)}</span><span><a href={`/regions/${c.region.toLowerCase().replace(/\s/g, '-')}/`}>{c.region}</a></span></p>
     </section>
 
     <div class="article">
@@ -52,21 +58,23 @@ const nearby = relatedCountries(c, 8);
           <h2 class="h2" id="visa-h">Visa rules by passport</h2>
           <div class="table-wrap">
             <table>
-              <thead><tr><th scope="col">Passport</th><th scope="col">Entry</th><th scope="col">Fee</th><th scope="col">Stay</th></tr></thead>
+              <thead><tr><th scope="col">Passports</th><th scope="col">Entry</th><th scope="col">Fee</th><th scope="col">Stay</th></tr></thead>
               <tbody>
-                {passports.map((p) => { const r = rule(c, p); return (
+                {groupedRules(c).map(({ rule: r, passports: ps }) => (
                   <tr>
-                    <td><a href={visaPath(p, c)}>{label(p.country)}</a></td>
-                    <td><span class={`pill ${stampClass[r.type]}`}>{visaLabel[r.type]}</span></td>
-                    <td class="mono">{r.fee ?? (r.type === 'free' ? '—' : 'See portal')}</td>
-                    <td>{r.stay ?? '—'}</td>
+                    <td>{ps.length === passports.length ? <span>All {ps.length} passports we cover</span> : ps.map((p, i) => <>{i > 0 && ', '}<a href={visaPath(p, c)}>{passportName(p)}</a></>)}</td>
+                    <td data-label="Entry"><span class={`pill ${stampClass[r.type]}`}>{visaLabel[r.type]}</span></td>
+                    <td data-label="Fee" class="mono">{r.fee ?? (r.type === 'free' ? '—' : 'See portal')}</td>
+                    <td data-label="Stay">{r.stay ?? '—'}</td>
                   </tr>
-                ); })}
+                ))}
               </tbody>
             </table>
           </div>
-          {eu.note && <p style="color:var(--muted);margin-top:12px"><b>EU passports:</b> {eu.note}</p>}
-          {c.visa.US.type !== eu.type && c.visa.US.note && <p style="color:var(--muted);margin-top:8px"><b>US passports:</b> {c.visa.US.note}</p>}
+          {eu.note && <p style="color:var(--muted);margin-top:12px"><b>Most EU passports:</b>{" "}{eu.note}</p>}
+          {c.visa.US.type !== eu.type && c.visa.US.note && <p style="color:var(--muted);margin-top:8px"><b>US passports:</b>{" "}{c.visa.US.note}</p>}
+          <p class="eyebrow" style="margin:20px 0 10px">Detailed guide for your passport</p>
+          <ul class="chips">{passports.map((p) => <li><a href={visaPath(p, c)}>{p.demonym}</a></li>)}</ul>
         </section>
 
         <section class="section prose" aria-labelledby="health-h" style="margin-top:28px">

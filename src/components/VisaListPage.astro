@@ -1,0 +1,82 @@
+---
+import Base from '../layouts/Base.astro';
+import Crumbs from './Crumbs.astro';
+import Faq from './Faq.astro';
+import { countries } from '../data/countries';
+import type { Passport } from '../data/passports';
+import { DATA_CHECKED, globalSources, passportSources } from '../data/sources';
+import { rule, visaLabel, stampClass, visaPath, listTypes, listPath, passportName, formatDate, type ListSlug } from '../lib/visa';
+import { site } from '../config/site';
+
+interface Props { p: Passport; list: ListSlug }
+const { p, list } = Astro.props;
+const def = listTypes[list];
+const rows = countries
+  .map((c) => ({ c, r: rule(c, p) }))
+  .filter(({ r }) => (def.types as readonly string[]).includes(r.type))
+  .sort((a, b) => a.c.name.localeCompare(b.c.name));
+const title = def.title(p.demonym);
+const n = rows.length;
+const names = rows.slice(0, 6).map((x) => x.c.name).join(', ');
+const intro = {
+  'visa-free': `With a passport from ${p.country} you can visit ${n} African countries without a visa for tourism${n ? `, including ${names}` : ''}.`,
+  'evisa': `${n} African countries let ${p.demonym} citizens apply online before travel, either for an eVisa or an electronic travel authorisation${n ? `: ${names} and more` : ''}.`,
+  'visa-on-arrival': `${n} African countries sell ${p.demonym} citizens a visa at the airport on arrival${n ? `, including ${names}` : ''}. Most also offer the same visa online in advance.`,
+}[list];
+const description = `${intro} Stays, fees and links for each country. Checked ${formatDate(DATA_CHECKED)}.`;
+const others = (Object.keys(listTypes) as ListSlug[]).filter((l) => l !== list);
+const faq = [
+  { q: { 'visa-free': `Which African countries can ${p.demonym} citizens visit without a visa?`, 'evisa': `Which African countries offer ${p.demonym} citizens an eVisa?`, 'visa-on-arrival': `Which African countries give ${p.demonym} citizens a visa on arrival?` }[list], a: n ? `${n} countries: ${rows.map((x) => x.c.name).join(', ')}.` : 'None at the moment.' },
+  { q: `Do the same rules apply to all EU passports?`, a: 'Mostly, but not always. Mozambique, Rwanda and Lesotho are examples where nationalities inside the EU are treated differently. This list uses the rules for your exact passport.' },
+  { q: `How current is this list?`, a: `It was last checked on ${formatDate(DATA_CHECKED)}. Rules change, so confirm on the official portal of each country before you book.` },
+];
+const itemList = {
+  '@context': 'https://schema.org', '@type': 'ItemList', name: title, numberOfItems: n,
+  itemListElement: rows.map((x, i) => ({ '@type': 'ListItem', position: i + 1, name: x.c.name, url: new URL(visaPath(p, x.c), site.url).href })),
+};
+const sources = [passportSources[p.slug], globalSources[1], globalSources[2], globalSources[3]].filter(Boolean);
+---
+<Base title={title} description={description} jsonLd={[itemList]}>
+  <div class="wrap">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'Visa by passport', href: '/visa/' }, { name: passportName(p), href: `/visa/${p.slug}/` }, { name: def.short, href: listPath(list, p) }]} />
+      <p class="eyebrow">{p.flag} passport · {n} countries</p>
+      <h1 class="h1">{title}</h1>
+      <p class="lede">{intro}</p>
+      <p class="page-meta"><span>Last checked {formatDate(DATA_CHECKED)}</span></p>
+    </section>
+
+    {n > 0 ? (
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Country</th><th scope="col">Entry</th><th scope="col">Fee</th><th scope="col">Stay</th></tr></thead>
+          <tbody>
+            {rows.map(({ c, r }) => (
+              <tr>
+                <td><a href={visaPath(p, c)}>{c.name}</a></td>
+                <td data-label="Entry"><span class={`pill ${stampClass[r.type]}`}>{visaLabel[r.type]}</span></td>
+                <td data-label="Fee" class="mono">{r.fee ?? (r.type === 'free' ? '—' : 'See portal')}</td>
+                <td data-label="Stay">{r.stay ?? '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : <p>No African countries are in this category for your passport right now.</p>}
+
+    <section class="section" style="margin-top:28px">
+      <h2 class="h2">Other lists for {p.demonym} citizens</h2>
+      <ul class="chips">
+        {others.map((l) => <li><a href={listPath(l, p)}>{listTypes[l].short}</a></li>)}
+        <li><a href={`/visa/${p.slug}/`}>All 54 countries</a></li>
+      </ul>
+    </section>
+
+    <Faq items={faq} />
+
+    <section class="section" id="sources">
+      <h2 class="h2">Sources</h2>
+      <ul class="sources">{sources.map((s) => <li><a href={s.url} rel="noopener" target="_blank">{s.label}</a></li>)}</ul>
+    </section>
+  </div>
+</Base>

@@ -16,12 +16,18 @@ Static Astro site served by Cloudflare Workers (static assets) with a small Work
 | D1 schema | `migrations/0001_leads.sql` |
 | Cloudflare konfigūracija | `wrangler.jsonc` |
 
-### Puslapiai (833 iš viso)
+### Puslapiai (887 iš viso)
 
 - `/` – pagrindinis su tikrintuvu ir animuotu bento bloku
 - `/countries/` ir `/countries/{šalis}/` – 54 šalių puslapiai
 - `/visa/` , `/visa/{pasas}/` ir `/visa/{pasas}/{šalis}/` – 14 × 54 = 756 pSEO puslapiai („Do Lithuanian citizens need a visa for Tanzania?“)
+- `/visa-free-countries/{pasas}/`, `/evisa-countries/{pasas}/`, `/visa-on-arrival-countries/{pasas}/` – 42 sąrašų puslapiai
+- `/regions/{regionas}/` – 5 regionų puslapiai
+- `/health/yellow-fever/`, `/health/malaria/` – sveikatos suvestinės
+- `/guides/` – vadovai: taisyklių pakeitimai 2025–2026, East Africa Tourist Visa, KAZA UNIVISA, oficialūs vizų portalai
 - `/safari/` – užklausų forma (lead-gen) → D1 + Telegram pranešimas
+- `/llms.txt`, `/llms-full.txt`, `/data/visa-rules.json` – santraukos ir atviri duomenys AI paieškai (GEO)
+- `public/og.png` – socialinių tinklų paveikslėlis (`node scripts/og.mjs`)
 - `/about/`, `/disclosure/`, `/privacy/`, `404`, `robots.txt`, `sitemap-index.xml`
 
 Kiekvienas pSEO puslapis turi kanoninę nuorodą, Article + BreadcrumbList + FAQPage JSON-LD ir vidines nuorodas (kiti pasai, kaimyninės šalys).

@@ -5,7 +5,7 @@ import { countries } from '../../../data/countries';
 import { passports } from '../../../data/passports';
 import type { Passport } from '../../../data/passports';
 import type { VisaType } from '../../../data/types';
-import { rule, visaLabel, stampClass, visaPath, formatDate } from '../../../lib/visa';
+import { rule, visaLabel, stampClass, visaPath, formatDate, listPath } from '../../../lib/visa';
 import { DATA_CHECKED } from '../../../data/sources';
 
 export function getStaticPaths() {
@@ -35,9 +35,10 @@ const sorted = [...countries].sort((a, b) => a.name.localeCompare(b.name));
     </section>
 
     <dl class="fact-grid" style="margin-bottom:32px">
-      <div class="fact"><dt>Visa-free</dt><dd class="h2" style="margin:0;color:var(--accent)">{free}</dd></div>
-      <div class="fact"><dt>Online or on arrival</dt><dd class="h2" style="margin:0;color:var(--gold)">{online}</dd></div>
+      <div class="fact"><dt><a href={listPath('visa-free', p)}>Visa-free →</a></dt><dd class="h2" style="margin:0;color:var(--accent)">{free}</dd></div>
+      <div class="fact"><dt><a href={listPath('evisa', p)}>eVisa</a> / <a href={listPath('visa-on-arrival', p)}>on arrival →</a></dt><dd class="h2" style="margin:0;color:var(--gold)">{online}</dd></div>
       <div class="fact"><dt>Embassy visa</dt><dd class="h2" style="margin:0;color:var(--stamp)">{embassy}</dd></div>
+      {none > 0 && <div class="fact"><dt>Suspended</dt><dd class="h2" style="margin:0;color:var(--stamp)">{none}</dd></div>}
     </dl>
 
     <div class="table-wrap">
@@ -47,14 +48,15 @@ const sorted = [...countries].sort((a, b) => a.name.localeCompare(b.name));
           {sorted.map((c) => { const r = rule(c, p); return (
             <tr>
               <td><a href={visaPath(p, c)}>{c.name}</a></td>
-              <td><span class={`pill ${stampClass[r.type]}`}>{visaLabel[r.type]}</span></td>
-              <td class="mono">{r.fee ?? (r.type === 'free' ? '—' : 'See portal')}</td>
-              <td>{r.stay ?? '—'}</td>
+              <td data-label="Entry"><span class={`pill ${stampClass[r.type]}`}>{visaLabel[r.type]}</span></td>
+              <td data-label="Fee" class="mono">{r.fee ?? (r.type === 'free' ? '—' : 'See portal')}</td>
+              <td data-label="Stay">{r.stay ?? '—'}</td>
             </tr>
           ); })}
         </tbody>
       </table>
     </div>
+    <p style="margin-top:18px"><a href={p.advice.url} rel="noopener" target="_blank">Travel advice for {p.demonym} citizens: {p.advice.name} →</a></p>
     <p class="eyebrow" style="margin-top:14px;text-transform:none;letter-spacing:0">Last checked {formatDate(DATA_CHECKED)}. Each country page lists its sources. Confirm on the official portal before you book.</p>
   </div>
 </Base>

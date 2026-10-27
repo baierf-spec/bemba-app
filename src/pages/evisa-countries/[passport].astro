@@ -1,0 +1,11 @@
+---
+import VisaListPage from '../../components/VisaListPage.astro';
+import { passports } from '../../data/passports';
+import type { Passport } from '../../data/passports';
+export function getStaticPaths() {
+  return passports.map((p) => ({ params: { passport: p.slug }, props: { p } }));
+}
+interface Props { p: Passport }
+const { p } = Astro.props;
+---
+<VisaListPage p={p} list="evisa" />

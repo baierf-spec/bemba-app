@@ -1,0 +1,50 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import { countries } from '../../data/countries';
+import { DATA_CHECKED } from '../../data/sources';
+import { countryPath, formatDate } from '../../lib/visa';
+const by = (k: string) => countries.filter((c) => c.malaria === k).sort((a, b) => a.name.localeCompare(b.name));
+const yes = by('yes'), some = by('some'), no = by('no');
+const title = 'Malaria risk in Africa by country';
+const description = `Malaria is present across most of ${yes.length} African countries and in parts of ${some.length} more. ${no.length} countries have little or no risk. Overview by country.`;
+---
+<Base title={title} description={description}>
+  <div class="wrap narrow">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'Guides', href: '/guides/' }, { name: 'Malaria', href: '/health/malaria/' }]} />
+      <p class="eyebrow">Health · 54 countries</p>
+      <h1 class="h1">Malaria risk in Africa.</h1>
+      <p class="lede">A quick overview to plan your clinic visit. Risk depends on region, altitude and season, so a travel clinic should check your exact route.</p>
+      <p class="page-meta"><span>Last checked {formatDate(DATA_CHECKED)}</span></p>
+    </section>
+    <section class="section" style="border-top:0;padding-top:0">
+      <h2 class="h2">Most of the country ({yes.length})</h2>
+      <ul class="chips">{yes.map((c) => <li><a href={countryPath(c)}>{c.name}</a></li>)}</ul>
+    </section>
+    <section class="section">
+      <h2 class="h2">Some regions ({some.length})</h2>
+      <ul class="chips">{some.map((c) => <li><a href={countryPath(c)}>{c.name}</a></li>)}</ul>
+    </section>
+    <section class="section">
+      <h2 class="h2">Little or no risk ({no.length})</h2>
+      <ul class="chips">{no.map((c) => <li><a href={countryPath(c)}>{c.name}</a></li>)}</ul>
+      <p style="color:var(--muted);margin-top:14px">Cabo Verde and Algeria are certified malaria-free by the WHO.</p>
+    </section>
+    <section class="section prose">
+      <h2 class="h2">Before you go</h2>
+      <ul>
+        <li>See a travel clinic 6 to 8 weeks before departure. Some antimalarials start a week or more before travel.</li>
+        <li>Use repellent with DEET or picaridin and sleep under a treated net where lodges provide one.</li>
+        <li>A fever up to a year after your trip needs a malaria test. Tell the doctor where you travelled.</li>
+      </ul>
+    </section>
+    <section class="section" id="sources">
+      <h2 class="h2">Sources</h2>
+      <ul class="sources">
+        <li><a href="https://www.who.int/news-room/fact-sheets/detail/malaria" rel="noopener" target="_blank">WHO: Malaria fact sheet</a></li>
+        <li><a href="https://www.cdc.gov/yellow-book/hcp/travel-associated-infections-diseases/malaria.html" rel="noopener" target="_blank">CDC Yellow Book: Malaria</a></li>
+      </ul>
+    </section>
+  </div>
+</Base>

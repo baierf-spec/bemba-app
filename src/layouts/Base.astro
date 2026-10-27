@@ -17,6 +17,7 @@ const path = Astro.url.pathname;
 const nav = [
   { href: '/countries/', label: 'Countries' },
   { href: '/visa/', label: 'Visa by passport' },
+  { href: '/guides/', label: 'Guides' },
   { href: '/about/', label: 'How we check' },
 ];
 ---
@@ -28,13 +29,18 @@ const nav = [
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    {noindex && <meta name="robots" content="noindex" />}
     <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content={site.name} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content={new URL('/og.png', site.url).href} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="robots" content={noindex ? 'noindex' : 'index, follow, max-image-preview:large, max-snippet:-1'} />
+    <link rel="alternate" type="text/plain" title="LLM summary" href="/llms.txt" />
     <meta name="theme-color" content="#0B7A57" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="sitemap" href="/sitemap-index.xml" />
@@ -55,6 +61,11 @@ const nav = [
           <li><a class="btn" href="/safari/">Get safari quotes</a></li>
         </ul>
       </div>
+      <nav class="wrap" aria-label="Main">
+        <ul class="mnav">
+          {nav.map((n) => <li><a href={n.href} aria-current={path.startsWith(n.href) ? 'page' : undefined}>{n.label}</a></li>)}
+        </ul>
+      </nav>
     </header>
 
     <main id="main">
@@ -89,6 +100,9 @@ const nav = [
           <h2>Bemba</h2>
           <ul>
             <li><a href="/about/">How we check</a></li>
+            <li><a href="/guides/rule-changes/">Rule changes</a></li>
+            <li><a href="/health/yellow-fever/">Yellow fever</a></li>
+            <li><a href="/guides/official-visa-portals/">Official visa portals</a></li>
             <li><a href="/safari/">Safari quotes</a></li>
             <li><a href="/disclosure/">Partner disclosure</a></li>
             <li><a href="/privacy/">Privacy</a></li>

@@ -16,7 +16,7 @@ const regions: Region[] = ['North Africa', 'West Africa', 'Central Africa', 'Eas
     </section>
     {regions.map((r) => (
       <section class="region" id={r.toLowerCase().replace(/\s/g, '-')}>
-        <h2>{r}</h2>
+        <h2><a href={`/regions/${r.toLowerCase().replace(/\s/g, '-')}/`} style="text-decoration:none">{r} →</a></h2>
         <ul class="c-grid">
           {countries.filter((c) => c.region === r).sort((a, b) => a.name.localeCompare(b.name)).map((c) => (
             <li><a href={countryPath(c)}><b>{c.name}</b><span class="mono" style="color:var(--muted);font-size:12px">{c.airports[0].code}</span></a></li>

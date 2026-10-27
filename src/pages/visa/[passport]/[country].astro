@@ -12,7 +12,7 @@ import type { Country } from '../../../data/types';
 import type { Passport } from '../../../data/passports';
 import {
   rule, shortAnswer, applySteps, visaLabel, visaSub, stampClass, needsVisa,
-  yellowFeverText, malariaText, relatedCountries, otherPassports, visaPath, countryPath, sourcesFor,
+  yellowFeverText, malariaText, relatedCountries, otherPassports, visaPath, countryPath, sourcesFor, formatDate, listPath,
 } from '../../../lib/visa';
 
 export function getStaticPaths() {
@@ -55,7 +55,11 @@ const article = {
   headline: title,
   description,
   about: { '@type': 'Country', name: c.name },
-  publisher: { '@type': 'Organization', name: 'Bemba', url: 'https://bemba.com' },
+  publisher: { '@type': 'Organization', name: 'Bemba', url: 'https://bemba.com', logo: { '@type': 'ImageObject', url: 'https://bemba.com/og.png' } },
+  author: { '@type': 'Organization', name: 'Bemba', url: 'https://bemba.com/about/' },
+  image: 'https://bemba.com/og.png',
+  inLanguage: 'en',
+  mainEntityOfPage: new URL(Astro.url.pathname, 'https://bemba.com').href,
   ...(c.checkedAt ? { dateModified: c.checkedAt } : {}),
 };
 
@@ -68,6 +72,7 @@ const others = otherPassports(p);
       <Crumbs items={[{ name: 'Visa by passport', href: '/visa/' }, { name: p.country.replace(/^the /, '').replace(/^./, (s) => s.toUpperCase()), href: `/visa/${p.slug}/` }, { name: c.name, href: visaPath(p, c) }]} />
       <p class="eyebrow">{c.region} · {p.flag} passport</p>
       <h1 class="h1">{title}</h1>
+      <p class="page-meta"><span>Last checked {formatDate(c.checkedAt!)}</span><span>{sourcesFor(c, p).length} sources</span><span>{c.capital} · {c.currency.code}</span></p>
     </section>
 
     <div class="article">
@@ -110,6 +115,12 @@ const others = otherPassports(p);
           <p><b>Yellow fever.</b> {yellowFeverText[c.yellowFever]}</p>
           <p><b>Malaria.</b> {malariaText[c.malaria]}</p>
           <p>Book a travel clinic visit 6 to 8 weeks before departure. Some vaccines, including yellow fever, must be given at least 10 days before you arrive.</p>
+        </section>
+
+        <section class="section prose" aria-labelledby="advice">
+          <h2 class="h2" id="advice">Travel advice for {p.demonym} travellers</h2>
+          <p>Your own government publishes safety advice and emergency contacts for {c.name}. Check it before you book and register your trip if your country offers that service: <a href={p.advice.url} rel="noopener" target="_blank">{p.advice.name}</a>.</p>
+          <p>More entry rules for your passport: <a href={`/visa/${p.slug}/`}>all 54 countries</a>, <a href={listPath('visa-free', p)}>visa-free countries</a>, <a href={listPath('evisa', p)}>eVisa countries</a> and <a href={listPath('visa-on-arrival', p)}>visa on arrival countries</a>.</p>
         </section>
 
         <section class="section" aria-labelledby="practical">

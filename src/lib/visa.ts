@@ -41,6 +41,7 @@ export function sourcesFor(country: Country, passport?: Passport): Source[] {
   const list: Source[] = [];
   if (country.portal) list.push({ label: `Official ${country.name} visa portal`, url: country.portal });
   list.push(...(country.sources ?? []));
+  if (passport) list.push({ label: passport.advice.name, url: passport.advice.url });
   if (passport && passportSources[passport.slug]) list.push(passportSources[passport.slug]);
   list.push(...globalSources);
   const seen = new Set<string>();
@@ -145,3 +146,25 @@ export const visaPath = (p: Passport, c: Country) => `/visa/${p.slug}/${c.slug}/
 export const countryPath = (c: Country) => `/countries/${c.slug}/`;
 
 export const isChecked = (c: Country) => Boolean(c.checkedAt);
+
+/** Group passports that share an identical rule for a country, preserving order. */
+export function groupedRules(country: Country): { rule: VisaRule; passports: Passport[] }[] {
+  const groups: { key: string; rule: VisaRule; passports: Passport[] }[] = [];
+  for (const p of passports) {
+    const r = rule(country, p);
+    const key = JSON.stringify([r.type, r.fee ?? '', r.stay ?? '']);
+    const g = groups.find((x) => x.key === key);
+    if (g) g.passports.push(p); else groups.push({ key, rule: r, passports: [p] });
+  }
+  return groups;
+}
+
+export const passportName = (p: Passport) => p.country.replace(/^the /, '').replace(/^./, (x) => x.toUpperCase());
+
+export const listTypes = {
+  'visa-free': { types: ['free'] as VisaType[], title: (d: string) => `Visa-free African countries for ${d} citizens`, short: 'Visa-free' },
+  'evisa': { types: ['evisa', 'eta'] as VisaType[], title: (d: string) => `African countries with an eVisa for ${d} citizens`, short: 'eVisa or online authorisation' },
+  'visa-on-arrival': { types: ['voa'] as VisaType[], title: (d: string) => `African countries with visa on arrival for ${d} citizens`, short: 'Visa on arrival' },
+} as const;
+export type ListSlug = keyof typeof listTypes;
+export const listPath = (l: ListSlug, p: Passport) => `/${l}-countries/${p.slug}/`;
