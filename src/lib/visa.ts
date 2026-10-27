@@ -1,4 +1,5 @@
-import type { Country, VisaRule, VisaType } from '../data/types';
+import type { Country, VisaRule, VisaType, Source } from '../data/types';
+import { globalSources, passportSources } from '../data/sources';
 import type { Passport } from '../data/passports';
 import { countries } from '../data/countries';
 import { passports } from '../data/passports';
@@ -9,6 +10,7 @@ export const visaLabel: Record<VisaType, string> = {
   evisa: 'eVisa',
   voa: 'Visa on arrival',
   embassy: 'Embassy visa',
+  none: 'Not available',
 };
 
 export const visaSub: Record<VisaType, string> = {
@@ -17,6 +19,7 @@ export const visaSub: Record<VisaType, string> = {
   evisa: 'before travel',
   voa: 'or online',
   embassy: 'apply in advance',
+  none: 'currently suspended',
 };
 
 export const stampClass: Record<VisaType, string> = {
@@ -25,12 +28,27 @@ export const stampClass: Record<VisaType, string> = {
   evisa: 's-evisa',
   voa: 's-evisa',
   embassy: 's-req',
+  none: 's-req',
 };
 
 export const needsVisa = (t: VisaType) => t !== 'free';
 
 export function rule(country: Country, passport: Passport): VisaRule {
-  return country.visa[passport.group];
+  return country.overrides?.[passport.slug] ?? country.visa[passport.group];
+}
+
+export function sourcesFor(country: Country, passport?: Passport): Source[] {
+  const list: Source[] = [];
+  if (country.portal) list.push({ label: `Official ${country.name} visa portal`, url: country.portal });
+  list.push(...(country.sources ?? []));
+  if (passport && passportSources[passport.slug]) list.push(passportSources[passport.slug]);
+  list.push(...globalSources);
+  const seen = new Set<string>();
+  return list.filter((s) => (seen.has(s.url) ? false : (seen.add(s.url), true)));
+}
+
+export function formatDate(iso: string): string {
+  return new Date(iso + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
 
 /** One-sentence answer used in the page's answer box, meta description and FAQ. */
@@ -50,6 +68,8 @@ export function shortAnswer(country: Country, passport: Passport): string {
       return `Yes. ${who} need a visa for ${country.name}, which can be bought on arrival or online in advance.${fee}`;
     case 'embassy':
       return `Yes. ${who} need a visa for ${country.name} and must apply at an embassy or consulate before travel.`;
+    case 'none':
+      return `${who} currently cannot get a tourist visa for ${country.name}: entry or visa issuance has been suspended.`;
   }
 }
 
@@ -86,6 +106,12 @@ export function applySteps(country: Country, r: VisaRule): string[] {
         'Book an appointment and prepare the form, photos, invitation or hotel booking and proof of funds.',
         'Apply at least 4 to 6 weeks before travel. Processing times vary widely.',
       ];
+    case 'none':
+      return [
+        'Do not book non-refundable travel while the suspension is in place.',
+        'Check your government\'s travel advice and the embassy of the destination for updates.',
+        'If you hold a second nationality, check the rules for that passport.',
+      ];
   }
 }
 
@@ -118,4 +144,4 @@ export function otherPassports(passport: Passport, limit = 8): Passport[] {
 export const visaPath = (p: Passport, c: Country) => `/visa/${p.slug}/${c.slug}/`;
 export const countryPath = (c: Country) => `/countries/${c.slug}/`;
 
-export const isVerified = (c: Country) => Boolean(c.verifiedAt);
+export const isChecked = (c: Country) => Boolean(c.checkedAt);

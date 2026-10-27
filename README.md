@@ -26,11 +26,11 @@ Static Astro site served by Cloudflare Workers (static assets) with a small Work
 
 Kiekvienas pSEO puslapis turi kanoninę nuorodą, Article + BreadcrumbList + FAQPage JSON-LD ir vidines nuorodas (kiti pasai, kaimyninės šalys).
 
-## ⚠️ Prieš paleidžiant: patikrink duomenis
+## Duomenų tikslumas
 
-`src/data/countries.ts` yra **juodraštis**, surinktas be patikrinimo oficialiuose šaltiniuose. Kol šalis neturi `verifiedAt`, jos puslapiuose rodomas pranešimas „Being verified“.
+`src/data/countries.ts` patikrintas 2026-10-27 (`DATA_CHECKED` faile `src/data/sources.ts`) pagal Wikipedia lenteles kelioms EU, UK ir US pilietybėms, oficialius portalus, WHO geltonojo drugio sąrašą ir naujienas apie 2025–2026 pakeitimus. Kiekviename puslapyje rodoma tikrinimo data ir šaltiniai.
 
-Patikrinęs šalį oficialiame portale, nustatyk `verifiedAt: '2026-11-01'`. Pranešimas dings, o data atsiras schema.org žymose.
+Kai vėl patikrinsi duomenis, atnaujink `DATA_CHECKED`. Skirtumai tarp atskirų pasų rašomi `overrides` lauke (pvz. Mozambikas Baltijos šalims ir Lenkijai).
 
 ## Vietinis darbas
 

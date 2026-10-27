@@ -2,7 +2,8 @@
 import Base from '../layouts/Base.astro';
 import Crumbs from '../components/Crumbs.astro';
 import { countries } from '../data/countries';
-const verified = countries.filter((c) => c.verifiedAt).length;
+import { DATA_CHECKED, globalSources } from '../data/sources';
+import { formatDate } from '../lib/visa';
 ---
 <Base title="How we check entry rules" description="Where Bemba's visa and health information comes from, how often it is checked, and how to report a change.">
   <div class="wrap narrow">
@@ -14,11 +15,12 @@ const verified = countries.filter((c) => c.verifiedAt).length;
     </section>
     <div class="prose">
       <h2 class="h2">Sources</h2>
-      <p>We use government immigration portals, official eVisa sites, embassy pages and the World Health Organization's country list for yellow fever. Where a country has an official online portal, we link it on the country page.</p>
-      <h2 class="h2">Verification status</h2>
-      <p>Each country page shows whether its rules have been checked against official sources. Currently {verified} of {countries.length} countries are marked verified. Pages without that mark show a "being verified" notice.</p>
-      <h2 class="h2">Updates</h2>
-      <p>We review every country monthly and whenever a government announces a change. If a rule has changed and we have not caught it yet, email <span class="mono">hello@bemba.com</span> with the country and a link to the source.</p>
+      <p>Visa rules come from official government portals where they exist, the per-nationality visa requirement tables on Wikipedia (cross-checked between several EU, UK and US passports), and news reports of recent changes. Yellow fever rules come from the World Health Organization country list, with the US State Department country pages where they are stricter. Every country page lists the exact sources used.</p>
+      <ul>{globalSources.map((s) => <li><a href={s.url} rel="noopener" target="_blank">{s.label}</a></li>)}</ul>
+      <h2 class="h2">When it was checked</h2>
+      <p>All {countries.length} countries were last checked on {formatDate(DATA_CHECKED)}. The date is shown on every page.</p>
+      <h2 class="h2">Report a change</h2>
+      <p>Rules change, sometimes overnight. If you notice something out of date, email <span class="mono">hello@bemba.com</span> with the country and a link to the source, and we will update the page.</p>
       <h2 class="h2">What Bemba is not</h2>
       <p>Bemba is a travel guide, not a visa agency, a lawyer or a doctor. We never charge for visas. Apply only on the official portal, and get medical advice from a travel clinic.</p>
     </div>

@@ -6,19 +6,19 @@ import { countries } from '../data/countries';
 const safari = countries.filter((c) => c.safari).sort((a, b) => a.name.localeCompare(b.name));
 const months = ['Not sure yet', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const faq = [
-  { q: 'Is the quote service free?', a: 'Yes. Requests are free and you are under no obligation to book. Operators pay Bemba a referral fee if you book with them, which never changes your price.' },
-  { q: 'Who are the operators?', a: 'Licensed, locally based safari companies with recent traveller reviews. We send your request to up to three that cover your destination and dates.' },
-  { q: 'How soon will I hear back?', a: 'Most operators reply by email within 48 hours, usually with a draft itinerary and a price per person.' },
+  { q: 'Is the quote service free?', a: 'Yes. Requests are free and you are under no obligation to book. Operators may pay Bemba a referral fee if you book with them; it does not change your price.' },
+  { q: 'Who are the operators?', a: 'Safari companies based in the country you choose. We pass your request only to operators who cover your destination.' },
+  { q: 'How soon will I hear back?', a: 'Replies come by email, usually with a draft itinerary and a price per person. Response times depend on the operator and the season.' },
   { q: 'What should I include in my request?', a: 'Your rough dates, number of travellers, budget per person and anything that matters to you: lodges or camping, a beach extension, gorilla permits, children travelling.' },
 ];
 ---
-<Base title="Safari quotes from local operators" description="Send one request and get up to three safari quotes from vetted local operators in Tanzania, Kenya, Botswana, Namibia, Rwanda, Uganda and more. Free and with no obligation.">
+<Base title="Safari quotes from local operators" description="Send one safari request for Tanzania, Kenya, Botswana, Namibia, Rwanda, Uganda and more. We pass it to local operators who reply with itineraries and prices. Free, no obligation.">
   <div class="wrap">
     <section class="page-head">
       <Crumbs items={[{ name: 'Safari quotes', href: '/safari/' }]} />
-      <p class="eyebrow">Free · no obligation · replies within 48 h</p>
-      <h1 class="h1">One request, three safari quotes.</h1>
-      <p class="lede">Tell us where and when. We pass your request to up to three licensed local operators, and they reply to you directly with an itinerary and a price.</p>
+      <p class="eyebrow">Free · no obligation</p>
+      <h1 class="h1">One request, quotes from local operators.</h1>
+      <p class="lede">Tell us where and when. We pass your request to safari operators who cover that country, and they reply to you directly with an itinerary and a price.</p>
     </section>
 
     <div class="article">
@@ -72,7 +72,7 @@ const faq = [
             <button class="btn" type="submit" id="leadBtn">Send my request</button>
             <p class="form-msg" id="leadMsg" role="status"></p>
           </div>
-          <p class="eyebrow" style="text-transform:none;letter-spacing:0;font-size:12px">By sending, you agree that we share your request with up to three operators. See our <a href="/privacy/">privacy notice</a>.</p>
+          <p class="eyebrow" style="text-transform:none;letter-spacing:0;font-size:12px">By sending, you agree that we share your request with safari operators for your destination. See our <a href="/privacy/">privacy notice</a>.</p>
         </form>
 
         <Faq items={faq} />
@@ -83,7 +83,7 @@ const faq = [
           <h3>From request to reply</h3>
           <ol style="margin:0;padding-left:20px;font-size:14px;color:var(--muted);display:grid;gap:6px">
             <li>You send one short request.</li>
-            <li>We match it with up to three operators for that country.</li>
+            <li>We pass it to operators who cover that country.</li>
             <li>They email you itineraries and prices.</li>
             <li>You compare and book directly with the one you like.</li>
           </ol>

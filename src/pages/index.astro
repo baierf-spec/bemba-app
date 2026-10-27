@@ -3,29 +3,30 @@ import Base from '../layouts/Base.astro';
 import { countries } from '../data/countries';
 import { passports } from '../data/passports';
 import { site } from '../config/site';
-import { visaLabel, visaSub, stampClass, yellowFeverText, visaPath, countryPath } from '../lib/visa';
+import { visaLabel, visaSub, stampClass, visaPath, countryPath, rule, formatDate } from '../lib/visa';
+import { DATA_CHECKED } from '../data/sources';
 
 const sorted = [...countries].sort((a, b) => a.name.localeCompare(b.name));
 const checker = Object.fromEntries(sorted.map((c) => [c.slug, {
   name: c.name,
   air: c.airports.map((a) => a.code).join(' · '),
   yf: c.yellowFever === 'all' ? 'Required for all arrivals' : c.yellowFever === 'risk' ? 'If arriving from a risk country' : 'Not required',
-  visa: Object.fromEntries((['EU', 'UK', 'US'] as const).map((g) => {
-    const r = c.visa[g];
-    return [g, { label: visaLabel[r.type], sub: visaSub[r.type], cls: stampClass[r.type], fee: r.type === 'free' ? 'None' : (r.fee ?? 'Varies'), stay: r.stay ?? 'Set at entry' }];
+  visa: Object.fromEntries(passports.map((p) => {
+    const r = rule(c, p);
+    return [p.slug, { label: visaLabel[r.type], sub: visaSub[r.type], cls: stampClass[r.type], fee: r.fee ?? (r.type === 'free' ? 'None' : r.type === 'none' ? '—' : 'See official portal'), stay: r.stay ?? (r.type === 'none' ? '—' : 'Set at entry') }];
   })),
 }]));
-const groups = Object.fromEntries(passports.map((p) => [p.slug, p.group]));
 
 const p = (s: string) => passports.find((x) => x.slug === s)!;
 const c = (s: string) => countries.find((x) => x.slug === s)!;
 const popular = [
   { code: 'DAR', p: 'lithuania', c: 'tanzania', q: 'Do Lithuanians need a visa for Tanzania?' },
   { code: 'NBO', p: 'poland', c: 'kenya', q: 'Kenya eTA for Polish citizens' },
+  { code: 'MPM', p: 'lithuania', c: 'mozambique', q: 'Mozambique visa for Lithuanians' },
   { code: 'RAK', p: 'germany', c: 'morocco', q: 'Can Germans enter Morocco visa-free?' },
   { code: 'WDH', p: 'latvia', c: 'namibia', q: 'Namibia visa on arrival for Latvians' },
   { code: 'CAI', p: 'united-kingdom', c: 'egypt', q: 'Egypt e-Visa or visa on arrival for British travellers' },
-  { code: 'KGL', p: 'united-states', c: 'rwanda', q: 'Rwanda visa for US citizens' },
+  { code: 'KGL', p: 'united-kingdom', c: 'rwanda', q: 'Do British citizens need a visa for Rwanda?' },
   { code: 'CPT', p: 'estonia', c: 'south-africa', q: 'Do Estonians need a visa for South Africa?' },
   { code: 'EBB', p: 'netherlands', c: 'uganda', q: 'Uganda eVisa for Dutch passport holders' },
 ];
@@ -45,14 +46,14 @@ const ld = [
         <ul class="trust">
           <li><b>54</b> countries</li>
           <li><b>{passports.length}</b> passports</li>
-          <li>Official portals linked</li>
+          <li>Sources on every page</li>
         </ul>
       </div>
 
       <form class="passport" id="check" aria-labelledby="ppTitle" action="/visa/lithuania/tanzania/" method="get">
         <div class="pp-head">
           <h2 id="ppTitle">Entry check</h2>
-          <span class="eyebrow">Being verified</span>
+          <span class="eyebrow">Checked {formatDate(DATA_CHECKED)}</span>
         </div>
         <div class="fields">
           <div class="field">
@@ -92,7 +93,7 @@ const ld = [
           <p class="eyebrow">What Bemba does</p>
           <h2>Everything between booking and boarding.</h2>
         </div>
-        <p>One page per country and passport, with the papers, vaccines and local partners you need next, and a link to the official source.</p>
+        <p>One page per country and passport: visa type, fee, stay, yellow fever rules and the official portal, with sources listed.</p>
       </div>
 
       <div class="grid" id="grid">
@@ -129,8 +130,8 @@ const ld = [
         <article class="card c-map" style="--d:.09s">
           <div class="ld" style="--d2:.15s">
             <p class="eyebrow">Rules watch</p>
-            <h3>54 countries, re-checked every month.</h3>
-            <p class="desc">When a rule changes, the country page updates and the change is logged.</p>
+            <h3>54 countries, every rule sourced.</h3>
+            <p class="desc">Each page shows when it was last checked and links the official portal and sources behind it.</p>
           </div>
           <div class="vis ld" style="--d2:.3s">
             <div class="map-wrap"><canvas id="map" role="img" aria-label="Dot map of Africa coloured by entry type"></canvas></div>
@@ -176,8 +177,8 @@ const ld = [
         <article class="card c-safari" style="--d:.27s">
           <div class="ld" style="--d2:.15s">
             <p class="eyebrow">Safari quotes</p>
-            <h3>Three local operators, one request.</h3>
-            <p class="desc">Tell us dates and budget. Vetted operators reply within 48 hours. <a href="/safari/">Request quotes →</a></p>
+            <h3>One request, local operators reply.</h3>
+            <p class="desc">Tell us where, when and your budget, and we pass it to safari operators who cover that country. <a href="/safari/">Request quotes →</a></p>
           </div>
           <div class="vis ld" style="--d2:.3s">
             <div class="stack" id="stack" aria-hidden="true"></div>
@@ -298,7 +299,7 @@ const ld = [
     .index{padding-block:8px 64px}
   </style>
 
-  <script is:inline define:vars={{ CHECKER: checker, GROUPS: groups }}>
+  <script is:inline define:vars={{ CHECKER: checker }}>
 (() => {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!reduced && 'IntersectionObserver' in window) document.documentElement.classList.add('js');
@@ -306,7 +307,7 @@ const ld = [
 
   /* hero checker */
   function render(){
-    const ps = $('pass').value, ds = $('dest').value, d = CHECKER[ds], v = d.visa[GROUPS[ps]];
+    const ps = $('pass').value, ds = $('dest').value, d = CHECKER[ds], v = d.visa[ps];
     const st = $('rStamp'); st.className = 'stamp ' + v.cls; st.innerHTML = v.label + '<small>' + v.sub + '</small>';
     $('rFee').textContent = v.fee; $('rStay').textContent = v.stay; $('rYf').textContent = d.yf; $('rAir').textContent = d.air;
     const href = '/visa/' + ps + '/' + ds + '/'; $('rLink').href = href; $('check').action = href;
@@ -328,7 +329,7 @@ const ld = [
   const cls = { 'Visa-free':'s-free', 'Embassy visa':'s-req' };
 
   /* card A: prompt story */
-  const Q = ['tanzania','kenya','morocco','namibia','egypt','rwanda'].map((s) => { const d = CHECKER[s], v = d.visa.EU; return { n:d.name, cls:v.cls, l:v.label, fee:v.fee, stay:v.stay.replace(/^Up to /,''), air:d.air.split(' · ').slice(0,2).join(' · ') }; });
+  const Q = ['tanzania','kenya','morocco','namibia','egypt','rwanda'].map((s) => { const d = CHECKER[s], v = d.visa.lithuania; return { n:d.name, cls:v.cls, l:v.label, fee:v.fee, stay:v.stay.replace(/^Up to /,''), air:d.air.split(' · ').slice(0,2).join(' · ') }; });
   const qTxt=$('qTxt'), qCaret=$('qCaret'), qRes=$('qRes'), qStamp=$('qStamp'), chips=[...document.querySelectorAll('.c-check .chip')];
   const QP = 6.6; let qShown = 0;
   const setRes = (d) => { qStamp.className='stamp '+d.cls; qStamp.textContent=d.l; $('qFee').textContent=d.fee; $('qStay').textContent=d.stay; $('qAir').textContent=d.air; };
@@ -383,7 +384,7 @@ const ld = [
   }
 
   /* card D: safari request stack */
-  const REQ = [['Serengeti · 5 days','2 adults · Feb','3 quotes'],['Okavango Delta · 4 days','Couple · Jul','2 quotes'],['Masai Mara · 3 days','Family of 4 · Aug','3 quotes'],['Etosha self-drive · 6 days','2 adults · May','3 quotes'],['Bwindi gorilla trek · 3 days','Solo · Sep','2 quotes'],['Kruger · 4 days','Group of 6 · Oct','3 quotes']];
+  const REQ = [['Serengeti · 5 days','2 adults · Feb','Example'],['Okavango Delta · 4 days','Couple · Jul','Example'],['Masai Mara · 3 days','Family of 4 · Aug','Example'],['Etosha self-drive · 6 days','2 adults · May','Example'],['Bwindi gorilla trek · 3 days','Solo · Sep','Example'],['Kruger · 4 days','Group of 6 · Oct','Example']];
   const stack=$('stack'), SLOT=72, SP=3.4;
   const items=[0,1,2,3].map(() => { const el=document.createElement('div'); el.className='req'; el.innerHTML='<b></b><span></span><em></em>'; stack.appendChild(el); return el; });
   function placeStack(n, p){

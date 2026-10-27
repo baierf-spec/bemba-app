@@ -5,13 +5,14 @@ import Faq from '../../../components/Faq.astro';
 import Notices from '../../../components/Notices.astro';
 import Partners from '../../../components/Partners.astro';
 import SafariCta from '../../../components/SafariCta.astro';
+import Sources from '../../../components/Sources.astro';
 import { countries } from '../../../data/countries';
 import { passports } from '../../../data/passports';
 import type { Country } from '../../../data/types';
 import type { Passport } from '../../../data/passports';
 import {
   rule, shortAnswer, applySteps, visaLabel, visaSub, stampClass, needsVisa,
-  yellowFeverText, malariaText, relatedCountries, otherPassports, visaPath, countryPath,
+  yellowFeverText, malariaText, relatedCountries, otherPassports, visaPath, countryPath, sourcesFor,
 } from '../../../lib/visa';
 
 export function getStaticPaths() {
@@ -40,7 +41,7 @@ const faq = [
   },
   {
     q: `How much does the ${c.name} visa cost for ${p.demonym} passport holders?`,
-    a: r.type === 'free' ? 'There is no visa fee for tourist stays.' : r.fee ? `The fee is ${r.fee}. Pay only on the official government portal or at the border.` : 'Fees vary by visa length and entry type. The official portal shows the current price before you pay.',
+    a: r.type === 'free' ? (r.fee ? `There is no visa fee, but ${r.fee} applies.` : 'There is no visa fee for tourist stays.') : r.type === 'none' ? 'Visas are not currently being issued to this nationality.' : r.fee ? `The fee is ${r.fee}. Pay only on the official government portal or at the border.` : 'Fees vary by visa length and entry type. The official portal shows the current price before you pay.',
   },
   {
     q: `Which airports do flights to ${c.name} arrive at?`,
@@ -55,7 +56,7 @@ const article = {
   description,
   about: { '@type': 'Country', name: c.name },
   publisher: { '@type': 'Organization', name: 'Bemba', url: 'https://bemba.com' },
-  ...(c.verifiedAt ? { dateModified: c.verifiedAt } : {}),
+  ...(c.checkedAt ? { dateModified: c.checkedAt } : {}),
 };
 
 const neighbours = relatedCountries(c);
@@ -84,9 +85,9 @@ const others = otherPassports(p);
         <section class="section" aria-labelledby="at-a-glance" style="border-top:0">
           <h2 class="h2" id="at-a-glance">At a glance</h2>
           <dl class="fact-grid">
-            <div class="fact"><dt>Visa required</dt><dd>{yes ? (r.type === 'eta' ? 'No, but an online authorisation is' : 'Yes') : 'No'}</dd></div>
+            <div class="fact"><dt>Visa required</dt><dd>{r.type === 'none' ? 'Currently not issued' : yes ? (r.type === 'eta' ? 'No, but an online authorisation is' : 'Yes') : 'No'}</dd></div>
             <div class="fact"><dt>Type</dt><dd>{visaLabel[r.type]}</dd></div>
-            <div class="fact"><dt>Fee</dt><dd>{r.type === 'free' ? 'None' : (r.fee ?? 'Varies, see official portal')}</dd></div>
+            <div class="fact"><dt>Fee</dt><dd>{r.fee ?? (r.type === 'free' ? 'None' : r.type === 'none' ? '—' : 'See official portal')}</dd></div>
             <div class="fact"><dt>Stay</dt><dd>{r.stay ?? 'Set at entry'}</dd></div>
             <div class="fact"><dt>Yellow fever</dt><dd>{c.yellowFever === 'all' ? 'Certificate required' : c.yellowFever === 'risk' ? 'If arriving from a risk country' : 'Not required'}</dd></div>
             <div class="fact"><dt>Arrive at</dt><dd class="mono">{c.airports.map((a) => a.code).join(' · ')}</dd></div>
@@ -94,13 +95,13 @@ const others = otherPassports(p);
         </section>
 
         <section class="section prose" aria-labelledby="how">
-          <h2 class="h2" id="how">{r.type === 'free' ? `Entering ${c.name} without a visa` : `How to get your ${c.name} ${visaLabel[r.type].toLowerCase()}`}</h2>
+          <h2 class="h2" id="how">{r.type === 'free' ? `Entering ${c.name} without a visa` : r.type === 'none' ? `If you planned to visit ${c.name}` : `How to get your ${c.name} ${visaLabel[r.type].toLowerCase()}`}</h2>
           <ol>{steps.map((s) => <li>{s}</li>)}</ol>
-          {c.portal && r.type !== 'free' && (
+          {c.portal && r.type !== 'free' && r.type !== 'none' && (
             <p><a class="btn ghost" href={c.portal} rel="noopener" target="_blank">Official {c.name} portal →</a></p>
           )}
           {p.group === 'EU' && (
-            <p>These rules usually apply to all EU passports in the same way. A few countries treat individual nationalities differently, so check your own passport if you hold dual citizenship.</p>
+            <p>Most African countries treat all EU passports the same way, but some do not (Mozambique and Rwanda, for example). This page uses the rule for {p.country}.</p>
           )}
         </section>
 
@@ -125,6 +126,8 @@ const others = otherPassports(p);
         </section>
 
         <Faq items={faq} />
+
+        <Sources items={sourcesFor(c, p)} />
 
         <section class="section" aria-labelledby="more-passports">
           <h2 class="h2" id="more-passports">{c.name} visa rules for other passports</h2>

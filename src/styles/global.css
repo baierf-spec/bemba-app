@@ -161,3 +161,6 @@ td a:hover{color:var(--accent)}
 .form-msg.ok{color:var(--accent)}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.sources{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14px}
+.sources a{text-underline-offset:3px;text-decoration-color:var(--line)}
+.sources a:hover{color:var(--accent)}

@@ -35,7 +35,7 @@ export const partners: Partner[] = [
   {
     id: 'tours',
     title: 'Day tours and activities',
-    blurb: 'Book guided tours with free cancellation up to 24 hours before.',
+    blurb: 'Guided tours and activities, many with free cancellation up to 24 hours before.',
     cta: 'Browse tours',
     url: 'https://www.getyourguide.com/', // TODO: replace with your affiliate link
   },

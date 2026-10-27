@@ -1,29 +1,35 @@
 import type { Country, VisaRule, PassportGroup } from './types';
+import { DATA_CHECKED } from './sources';
 
 /*
- * DRAFT DATA. Compiled for the first build and NOT yet verified against official sources.
- * Before relying on any row, check the official portal / embassy and set `verifiedAt`.
- * Pages show a "being verified" notice for every country without `verifiedAt`.
+ * Visa data checked on DATA_CHECKED against: Wikipedia "Visa requirements for X citizens" tables
+ * (German, British, US, Lithuanian, Latvian, Estonian, Polish, Finnish, Swedish), official portals
+ * and news sources listed per country. Yellow fever: WHO country list, with US State Department
+ * country pages where they are stricter. Rules change often: re-check before relying on any row.
  */
 
 const same = (rule: VisaRule): Record<PassportGroup, VisaRule> => ({ EU: rule, UK: rule, US: rule });
+const BALTIC_PL = ['lithuania', 'latvia', 'estonia', 'poland'];
+const forEach = (slugs: string[], rule: VisaRule) => Object.fromEntries(slugs.map((s) => [s, rule]));
 
-export const countries: Country[] = [
+const US_SUSPENDED_2025 = 'Entry restrictions on US citizens announced in December 2025 as a reciprocal measure. Check the US State Department page before planning travel.';
+
+const raw: Omit<Country, 'checkedAt'>[] = [
   {
     slug: 'algeria', name: 'Algeria', iso2: 'DZ', region: 'North Africa', capital: 'Algiers',
     currency: { code: 'DZD', name: 'Algerian dinar' }, languages: ['Arabic', 'Tamazight', 'French'],
     airports: [{ code: 'ALG', city: 'Algiers' }, { code: 'ORN', city: 'Oran' }], plugs: ['C', 'F'],
     bestTime: 'October to April', malaria: 'no', yellowFever: 'risk', advisory: 'caution',
     highlights: ['Casbah of Algiers', 'Tassili n\'Ajjer rock art', 'Roman ruins of Timgad'],
-    visa: same({ type: 'embassy', note: 'Apply at an Algerian consulate before travel. Organised Sahara tours can arrange a visa on arrival for some southern airports.' }),
+    visa: same({ type: 'embassy', note: 'Apply at an Algerian consulate. Tourists on organised tours to some southern cities can get a visa on arrival for up to 30 days.' }),
   },
   {
     slug: 'angola', name: 'Angola', iso2: 'AO', region: 'Southern Africa', capital: 'Luanda',
     currency: { code: 'AOA', name: 'Angolan kwanza' }, languages: ['Portuguese'],
     airports: [{ code: 'NBJ', city: 'Luanda' }], plugs: ['C', 'F'],
     bestTime: 'May to September', malaria: 'yes', yellowFever: 'all', advisory: 'normal',
-    highlights: ['Kalandula Falls', 'Namibe Desert', 'Mussulo Peninsula'],
-    visa: same({ type: 'free', stay: 'Up to 30 days per entry', note: 'Tourist stays only. Longer stays need a visa.' }),
+    highlights: ['Kalandula Falls', 'Namib Desert in Namibe province', 'Mussulo Peninsula'],
+    visa: same({ type: 'free', stay: 'Up to 30 days per trip', note: 'Tourism only, maximum 90 days per calendar year. Bring a return ticket, hotel booking and a yellow fever certificate.' }),
   },
   {
     slug: 'benin', name: 'Benin', iso2: 'BJ', region: 'West Africa', capital: 'Porto-Novo',
@@ -31,7 +37,8 @@ export const countries: Country[] = [
     airports: [{ code: 'COO', city: 'Cotonou' }], plugs: ['C', 'E'],
     bestTime: 'November to March', malaria: 'yes', yellowFever: 'all', advisory: 'caution', safari: true,
     highlights: ['Ouidah and the Route des Esclaves', 'Ganvié stilt village', 'Pendjari National Park'],
-    visa: same({ type: 'evisa', stay: 'Up to 30 or 90 days' }),
+    portal: 'https://evisa.bj',
+    visa: same({ type: 'evisa', fee: '€50', stay: 'Up to 30 days', note: '€50 for 30 days single entry, €75 for 30 days multiple entry, €100 for 90 days multiple entry. A yellow fever certificate is required.' }),
   },
   {
     slug: 'botswana', name: 'Botswana', iso2: 'BW', region: 'Southern Africa', capital: 'Gaborone',
@@ -39,7 +46,7 @@ export const countries: Country[] = [
     airports: [{ code: 'GBE', city: 'Gaborone' }, { code: 'MUB', city: 'Maun' }, { code: 'BBK', city: 'Kasane' }], plugs: ['D', 'G', 'M'],
     bestTime: 'May to October', malaria: 'some', yellowFever: 'risk', advisory: 'normal', safari: true,
     highlights: ['Okavango Delta', 'Chobe National Park', 'Makgadikgadi Pans'],
-    visa: same({ type: 'free', stay: 'Up to 90 days' }),
+    visa: same({ type: 'free', stay: 'Up to 90 days', note: 'Maximum 90 days in any 12-month period.' }),
   },
   {
     slug: 'burkina-faso', name: 'Burkina Faso', iso2: 'BF', region: 'West Africa', capital: 'Ouagadougou',
@@ -47,7 +54,8 @@ export const countries: Country[] = [
     airports: [{ code: 'OUA', city: 'Ouagadougou' }], plugs: ['C', 'E'],
     bestTime: 'November to February', malaria: 'yes', yellowFever: 'all', advisory: 'avoid',
     highlights: ['Grand Mosque of Bobo-Dioulasso', 'Sindou Peaks', 'Painted houses of Tiébélé'],
-    visa: same({ type: 'embassy' }),
+    visa: { EU: { type: 'evisa', stay: 'Up to 1 month' }, UK: { type: 'evisa' }, US: { type: 'none', note: `Burkina Faso refuses entry to US citizens. ${US_SUSPENDED_2025}` } },
+    sources: [{ label: 'Al Jazeera: Mali, Burkina Faso ban US citizens (Dec 2025)', url: 'https://www.aljazeera.com/news/2025/12/31/mali-burkina-faso-ban-us-citizens-in-response-to-trump-travel-bans' }],
   },
   {
     slug: 'burundi', name: 'Burundi', iso2: 'BI', region: 'East Africa', capital: 'Gitega',
@@ -55,7 +63,7 @@ export const countries: Country[] = [
     airports: [{ code: 'BJM', city: 'Bujumbura' }], plugs: ['C', 'E'],
     bestTime: 'June to August', malaria: 'yes', yellowFever: 'all', advisory: 'caution',
     highlights: ['Lake Tanganyika beaches', 'Kibira National Park', 'Gishora drum sanctuary'],
-    visa: same({ type: 'voa' }),
+    visa: same({ type: 'voa', stay: 'Up to 1 month', note: 'Apply online or get the visa on arrival at Bujumbura airport and land borders.' }),
   },
   {
     slug: 'cabo-verde', name: 'Cabo Verde', iso2: 'CV', region: 'West Africa', capital: 'Praia',
@@ -64,7 +72,7 @@ export const countries: Country[] = [
     bestTime: 'November to June', malaria: 'no', yellowFever: 'risk', advisory: 'normal',
     highlights: ['Beaches of Sal and Boa Vista', 'Pico do Fogo volcano', 'Hiking on Santo Antão'],
     portal: 'https://www.ease.gov.cv',
-    visa: same({ type: 'free', stay: 'Up to 30 days', note: 'Visa-free, but you must pre-register online (EASE) and pay the airport security fee at least 5 days before arrival.' }),
+    visa: same({ type: 'free', fee: '3,400 CVE airport security fee', stay: 'Up to 30 days', note: 'No visa, but you must register online (EASE) and pay the airport security fee (about €31) at least 5 days before arrival.' }),
   },
   {
     slug: 'cameroon', name: 'Cameroon', iso2: 'CM', region: 'Central Africa', capital: 'Yaoundé',
@@ -73,7 +81,7 @@ export const countries: Country[] = [
     bestTime: 'November to February', malaria: 'yes', yellowFever: 'all', advisory: 'caution',
     highlights: ['Mount Cameroon', 'Kribi beaches and Lobé Falls', 'Waza National Park'],
     portal: 'https://www.evisacam.cm',
-    visa: same({ type: 'evisa', note: 'Apply online, then collect the visa on arrival or at a consulate.' }),
+    visa: same({ type: 'evisa', note: 'Apply online; the pre-approved visa is collected on arrival.' }),
   },
   {
     slug: 'central-african-republic', name: 'Central African Republic', iso2: 'CF', region: 'Central Africa', capital: 'Bangui',
@@ -89,23 +97,24 @@ export const countries: Country[] = [
     airports: [{ code: 'NDJ', city: 'N\'Djamena' }], plugs: ['C', 'D', 'E', 'F'],
     bestTime: 'November to February', malaria: 'yes', yellowFever: 'risk', advisory: 'avoid', safari: true,
     highlights: ['Zakouma National Park', 'Ennedi Plateau', 'Lake Chad'],
-    visa: same({ type: 'embassy' }),
+    visa: { EU: { type: 'evisa', stay: 'Up to 90 days', note: 'Apply 7 to 90 days before arrival.' }, UK: { type: 'evisa' }, US: { type: 'none', note: 'Chad suspended visa issuance to US citizens on 5 June 2025. Visas issued before that date are honoured.' } },
+    sources: [{ label: 'Arab News: Chad suspends visas to US citizens (Jun 2025)', url: 'https://www.arabnews.com/node/2603819/world' }],
   },
   {
     slug: 'comoros', name: 'Comoros', iso2: 'KM', region: 'East Africa', capital: 'Moroni',
     currency: { code: 'KMF', name: 'Comorian franc' }, languages: ['Comorian', 'Arabic', 'French'],
     airports: [{ code: 'HAH', city: 'Moroni' }], plugs: ['C', 'E'],
-    bestTime: 'May to October', malaria: 'yes', yellowFever: 'risk', advisory: 'normal',
+    bestTime: 'May to October', malaria: 'yes', yellowFever: 'no', advisory: 'normal',
     highlights: ['Mount Karthala', 'Mohéli Marine Park', 'Old town of Moroni'],
-    visa: same({ type: 'voa' }),
+    visa: same({ type: 'voa', stay: 'Up to 45 days' }),
   },
   {
     slug: 'dr-congo', name: 'DR Congo', iso2: 'CD', region: 'Central Africa', capital: 'Kinshasa',
     currency: { code: 'CDF', name: 'Congolese franc' }, languages: ['French', 'Lingala', 'Swahili'],
     airports: [{ code: 'FIH', city: 'Kinshasa' }, { code: 'GOM', city: 'Goma' }], plugs: ['C', 'D', 'E'],
-    bestTime: 'June to September', malaria: 'yes', yellowFever: 'all', advisory: 'avoid', safari: true,
+    bestTime: 'June to September', malaria: 'yes', yellowFever: 'all', advisory: 'caution', safari: true,
     highlights: ['Virunga National Park', 'Kahuzi-Biéga gorillas', 'Congo River'],
-    visa: same({ type: 'evisa', note: 'Most visitors need pre-approval online. Park visits in the east are often arranged through the park operator.' }),
+    visa: same({ type: 'evisa', stay: 'Up to 7 days (tourist eVisa)', note: 'Park visits in the east are usually arranged with visa support from the park operator.' }),
   },
   {
     slug: 'congo', name: 'Republic of the Congo', iso2: 'CG', region: 'Central Africa', capital: 'Brazzaville',
@@ -113,7 +122,7 @@ export const countries: Country[] = [
     airports: [{ code: 'BZV', city: 'Brazzaville' }, { code: 'PNR', city: 'Pointe-Noire' }], plugs: ['C', 'E'],
     bestTime: 'June to September', malaria: 'yes', yellowFever: 'all', advisory: 'caution', safari: true,
     highlights: ['Odzala-Kokoua National Park', 'Nouabalé-Ndoki forest', 'Pointe-Noire coast'],
-    visa: same({ type: 'evisa' }),
+    visa: same({ type: 'embassy' }),
   },
   {
     slug: 'cote-divoire', name: 'Côte d\'Ivoire', iso2: 'CI', region: 'West Africa', capital: 'Yamoussoukro',
@@ -122,7 +131,7 @@ export const countries: Country[] = [
     bestTime: 'November to March', malaria: 'yes', yellowFever: 'all', advisory: 'normal',
     highlights: ['Grand-Bassam old town', 'Basilica of Our Lady of Peace', 'Taï National Park'],
     portal: 'https://snedai.com',
-    visa: same({ type: 'evisa', note: 'Pre-enrol online; the visa is issued at Abidjan airport on arrival.' }),
+    visa: same({ type: 'evisa', stay: 'Up to 3 months', note: 'Pre-enrol online; the visa is issued on arrival at Abidjan (Port Bouët) airport.' }),
   },
   {
     slug: 'djibouti', name: 'Djibouti', iso2: 'DJ', region: 'East Africa', capital: 'Djibouti',
@@ -131,7 +140,7 @@ export const countries: Country[] = [
     bestTime: 'November to February', malaria: 'some', yellowFever: 'risk', advisory: 'normal',
     highlights: ['Lake Assal', 'Lac Abbé chimneys', 'Whale sharks in the Gulf of Tadjoura'],
     portal: 'https://www.evisa.gouv.dj',
-    visa: same({ type: 'evisa' }),
+    visa: same({ type: 'evisa', stay: 'Up to 90 days' }),
   },
   {
     slug: 'egypt', name: 'Egypt', iso2: 'EG', region: 'North Africa', capital: 'Cairo',
@@ -140,7 +149,7 @@ export const countries: Country[] = [
     bestTime: 'October to April', malaria: 'no', yellowFever: 'risk', advisory: 'caution',
     highlights: ['Pyramids of Giza', 'Temples of Luxor and Karnak', 'Red Sea reefs'],
     portal: 'https://visa2egypt.gov.eg',
-    visa: same({ type: 'voa', fee: 'US$25', stay: 'Up to 30 days', note: 'Available as an e-Visa before travel or as a visa on arrival at main airports.' }),
+    visa: same({ type: 'voa', fee: 'US$25', stay: 'Up to 30 days', note: 'Same price online or on arrival. Multiple entry costs US$60. A free 15-day Sinai-only stamp is available at South Sinai airports for resort stays.' }),
   },
   {
     slug: 'equatorial-guinea', name: 'Equatorial Guinea', iso2: 'GQ', region: 'Central Africa', capital: 'Malabo',
@@ -148,7 +157,7 @@ export const countries: Country[] = [
     airports: [{ code: 'SSG', city: 'Malabo' }, { code: 'BSG', city: 'Bata' }], plugs: ['C', 'E'],
     bestTime: 'December to February', malaria: 'yes', yellowFever: 'risk', advisory: 'normal',
     highlights: ['Bioko Island', 'Monte Alén National Park'],
-    visa: { EU: { type: 'evisa' }, UK: { type: 'evisa' }, US: { type: 'free', note: 'US citizens are visa-exempt for short stays.' } },
+    visa: same({ type: 'evisa', note: 'eVisa holders must arrive at Malabo International Airport.' }),
   },
   {
     slug: 'eritrea', name: 'Eritrea', iso2: 'ER', region: 'East Africa', capital: 'Asmara',
@@ -156,7 +165,7 @@ export const countries: Country[] = [
     airports: [{ code: 'ASM', city: 'Asmara' }], plugs: ['C', 'L'],
     bestTime: 'October to March', malaria: 'some', yellowFever: 'risk', advisory: 'caution',
     highlights: ['Modernist architecture of Asmara', 'Massawa old town', 'Dahlak Archipelago'],
-    visa: same({ type: 'embassy', note: 'Travel outside Asmara requires a separate travel permit.' }),
+    visa: same({ type: 'embassy', note: 'A pre-approved visa can be collected on arrival. Travel outside Asmara needs a separate permit.' }),
   },
   {
     slug: 'eswatini', name: 'Eswatini', iso2: 'SZ', region: 'Southern Africa', capital: 'Mbabane',
@@ -173,7 +182,8 @@ export const countries: Country[] = [
     bestTime: 'October to March', malaria: 'some', yellowFever: 'risk', advisory: 'caution',
     highlights: ['Rock-hewn churches of Lalibela', 'Simien Mountains', 'Danakil Depression'],
     portal: 'https://www.evisa.gov.et',
-    visa: same({ type: 'evisa', stay: 'Up to 30 or 90 days' }),
+    visa: same({ type: 'evisa', fee: 'US$62 (30 days)', stay: 'Up to 30 or 90 days', note: 'US$62 for 30 days, US$152 for 90 days (fees published July 2026). Arrive via Addis Ababa Bole airport.' }),
+    sources: [{ label: 'Legit.ng: Ethiopia announces tourist visa fees (Jul 2026)', url: 'https://www.legit.ng/people/1720329-ethiopia-announces-tourist-visa-fees-displays-cost-30-day-90-day-extensions/' }],
   },
   {
     slug: 'gabon', name: 'Gabon', iso2: 'GA', region: 'Central Africa', capital: 'Libreville',
@@ -182,7 +192,8 @@ export const countries: Country[] = [
     bestTime: 'June to September', malaria: 'yes', yellowFever: 'all', advisory: 'normal', safari: true,
     highlights: ['Loango National Park', 'Lopé National Park', 'Pongara beaches'],
     portal: 'https://evisa.dgdi.ga',
-    visa: same({ type: 'evisa' }),
+    visa: { EU: { type: 'evisa', stay: 'Up to 90 days', note: 'eVisa holders must arrive at Libreville airport.' }, UK: { type: 'evisa', stay: 'Up to 90 days', note: 'eVisa holders must arrive at Libreville airport.' }, US: { type: 'none', note: 'Gabon suspended visa issuance to US citizens from 1 January 2026 as a reciprocal measure.' } },
+    sources: [{ label: 'US State Department: Gabon', url: 'https://travel.state.gov/content/passports/en/country/gabon.html' }],
   },
   {
     slug: 'gambia', name: 'The Gambia', iso2: 'GM', region: 'West Africa', capital: 'Banjul',
@@ -190,7 +201,7 @@ export const countries: Country[] = [
     airports: [{ code: 'BJL', city: 'Banjul' }], plugs: ['G'],
     bestTime: 'November to May', malaria: 'yes', yellowFever: 'risk', advisory: 'normal',
     highlights: ['Kunta Kinteh Island', 'Abuko Nature Reserve', 'River Gambia birding'],
-    visa: same({ type: 'free', note: 'Short tourist stays are visa-free for most EU, UK and US passports. Check your exact nationality.' }),
+    visa: { EU: { type: 'free', stay: 'Up to 90 days' }, UK: { type: 'free', stay: 'Up to 90 days' }, US: { type: 'voa', stay: 'Up to 30 days' } },
   },
   {
     slug: 'ghana', name: 'Ghana', iso2: 'GH', region: 'West Africa', capital: 'Accra',
@@ -198,7 +209,7 @@ export const countries: Country[] = [
     airports: [{ code: 'ACC', city: 'Accra' }, { code: 'KMS', city: 'Kumasi' }], plugs: ['D', 'G'],
     bestTime: 'November to March', malaria: 'yes', yellowFever: 'all', advisory: 'normal', safari: true,
     highlights: ['Cape Coast Castle', 'Kakum canopy walk', 'Mole National Park'],
-    visa: same({ type: 'embassy', note: 'Apply through a Ghanaian embassy or the online application portal before travel.' }),
+    visa: { EU: { type: 'evisa', note: 'Apply online; the pre-approved visa is collected on arrival.' }, UK: { type: 'evisa', note: 'Apply online; the pre-approved visa is collected on arrival.' }, US: { type: 'evisa', fee: 'US$60 single entry', note: 'US$60 single entry or US$100 multiple entry.' } },
   },
   {
     slug: 'guinea', name: 'Guinea', iso2: 'GN', region: 'West Africa', capital: 'Conakry',
@@ -206,7 +217,7 @@ export const countries: Country[] = [
     airports: [{ code: 'CKY', city: 'Conakry' }], plugs: ['C', 'F', 'K'],
     bestTime: 'November to April', malaria: 'yes', yellowFever: 'all', advisory: 'caution',
     highlights: ['Fouta Djallon highlands', 'Îles de Los'],
-    visa: same({ type: 'evisa' }),
+    visa: same({ type: 'evisa', stay: 'Up to 90 days' }),
   },
   {
     slug: 'guinea-bissau', name: 'Guinea-Bissau', iso2: 'GW', region: 'West Africa', capital: 'Bissau',
@@ -214,7 +225,7 @@ export const countries: Country[] = [
     airports: [{ code: 'OXB', city: 'Bissau' }], plugs: ['C'],
     bestTime: 'November to May', malaria: 'yes', yellowFever: 'all', advisory: 'caution',
     highlights: ['Bijagós Archipelago', 'Cacheu mangroves'],
-    visa: same({ type: 'voa' }),
+    visa: same({ type: 'voa', stay: 'Up to 90 days', note: 'An authorisation from the migration office may be required before you arrive.' }),
   },
   {
     slug: 'kenya', name: 'Kenya', iso2: 'KE', region: 'East Africa', capital: 'Nairobi',
@@ -223,7 +234,7 @@ export const countries: Country[] = [
     bestTime: 'July to October and January to February', malaria: 'some', yellowFever: 'risk', advisory: 'normal', safari: true,
     highlights: ['Masai Mara', 'Amboseli and Kilimanjaro views', 'Lamu Old Town'],
     portal: 'https://www.etakenya.go.ke',
-    visa: same({ type: 'eta', fee: 'About US$30', stay: 'Up to 90 days', note: 'Apply online at least 3 days before travel. Approval usually arrives by email.' }),
+    visa: same({ type: 'eta', fee: 'US$32.50', stay: 'Up to 90 days', note: 'Apply 3 to 90 days before travel and upload a hotel booking. An East Africa Tourist Visa from Rwanda or Uganda is also accepted.' }),
   },
   {
     slug: 'lesotho', name: 'Lesotho', iso2: 'LS', region: 'Southern Africa', capital: 'Maseru',
@@ -231,7 +242,8 @@ export const countries: Country[] = [
     airports: [{ code: 'MSU', city: 'Maseru' }], plugs: ['M'],
     bestTime: 'March to May and September to November', malaria: 'no', yellowFever: 'risk', advisory: 'normal',
     highlights: ['Sani Pass', 'Maletsunyane Falls', 'Semonkong pony trekking'],
-    visa: same({ type: 'free' }),
+    visa: same({ type: 'free', stay: 'Up to 14 days', note: 'Extensions are possible at immigration offices in Lesotho.' }),
+    overrides: { ireland: { type: 'free', stay: 'Up to 90 days' } },
   },
   {
     slug: 'liberia', name: 'Liberia', iso2: 'LR', region: 'West Africa', capital: 'Monrovia',
@@ -239,7 +251,7 @@ export const countries: Country[] = [
     airports: [{ code: 'ROB', city: 'Monrovia' }], plugs: ['A', 'B', 'C', 'F'],
     bestTime: 'November to April', malaria: 'yes', yellowFever: 'all', advisory: 'caution',
     highlights: ['Sapo National Park', 'Robertsport surf beaches'],
-    visa: same({ type: 'embassy', note: 'A visa on arrival is possible with pre-approval arranged before travel.' }),
+    visa: { EU: { type: 'voa', note: 'Apply online for pre-approval; the visa is issued on arrival at Roberts International Airport.' }, UK: { type: 'voa', note: 'Apply online for pre-approval; the visa is issued on arrival at Roberts International Airport.' }, US: { type: 'embassy', note: 'US citizens are issued 3-year multiple-entry visas through the embassy.' } },
   },
   {
     slug: 'libya', name: 'Libya', iso2: 'LY', region: 'North Africa', capital: 'Tripoli',
@@ -247,7 +259,7 @@ export const countries: Country[] = [
     airports: [{ code: 'MJI', city: 'Tripoli (Mitiga)' }], plugs: ['C', 'L'],
     bestTime: 'October to April', malaria: 'no', yellowFever: 'risk', advisory: 'avoid',
     highlights: ['Leptis Magna', 'Sabratha', 'Ghadames old town'],
-    visa: same({ type: 'embassy' }),
+    visa: same({ type: 'evisa', note: 'Needs a sponsor or licensed tour agency. Tourists must travel with a guide and police escort. Passports with Israeli stamps are refused.' }),
   },
   {
     slug: 'madagascar', name: 'Madagascar', iso2: 'MG', region: 'East Africa', capital: 'Antananarivo',
@@ -256,7 +268,8 @@ export const countries: Country[] = [
     bestTime: 'April to November', malaria: 'yes', yellowFever: 'risk', advisory: 'normal', safari: true,
     highlights: ['Avenue of the Baobabs', 'Tsingy de Bemaraha', 'Nosy Be'],
     portal: 'https://evisamada.gov.mg',
-    visa: same({ type: 'voa', note: 'Available online before travel or on arrival. The fee depends on length of stay.' }),
+    visa: same({ type: 'voa', fee: '€30 (up to 15 days)', stay: 'Up to 90 days', note: 'Apply online or on arrival. The 15-day visa rose to €30 on 16 February 2026; longer stays cost more.' }),
+    sources: [{ label: 'Nairametrics: Madagascar raises 15-day e-visa fee (Feb 2026)', url: 'https://nairametrics.com/2026/02/18/madagascar-increases-15%e2%80%91day-tourist-e%e2%80%91visa-fee-to-e30/' }],
   },
   {
     slug: 'malawi', name: 'Malawi', iso2: 'MW', region: 'Southern Africa', capital: 'Lilongwe',
@@ -264,7 +277,9 @@ export const countries: Country[] = [
     airports: [{ code: 'LLW', city: 'Lilongwe' }, { code: 'BLZ', city: 'Blantyre' }], plugs: ['G'],
     bestTime: 'May to October', malaria: 'yes', yellowFever: 'risk', advisory: 'normal', safari: true,
     highlights: ['Lake Malawi', 'Liwonde National Park', 'Mount Mulanje'],
-    visa: same({ type: 'free' }),
+    portal: 'https://evisa.gov.mw',
+    visa: same({ type: 'voa', stay: 'Up to 30 days', note: 'Visa-free entry for EU, UK and US citizens ended on 3 January 2026. Use the eligibility checker on the official portal to see whether you can get the visa on arrival or must apply before departure.' }),
+    sources: [{ label: 'buch-dein-visum.de: Malawi reintroduces visas (Jan 2026)', url: 'https://www.buch-dein-visum.de/en/news/malawi/malawi-verschaerft-seine-politik-der-visumfreiheit' }],
   },
   {
     slug: 'mali', name: 'Mali', iso2: 'ML', region: 'West Africa', capital: 'Bamako',
@@ -272,7 +287,8 @@ export const countries: Country[] = [
     airports: [{ code: 'BKO', city: 'Bamako' }], plugs: ['C', 'E'],
     bestTime: 'November to February', malaria: 'yes', yellowFever: 'all', advisory: 'avoid',
     highlights: ['Great Mosque of Djenné', 'Timbuktu', 'Dogon Country'],
-    visa: same({ type: 'embassy' }),
+    visa: { EU: { type: 'embassy' }, UK: { type: 'embassy' }, US: { type: 'none', note: `Mali refuses entry to US citizens. ${US_SUSPENDED_2025}` } },
+    sources: [{ label: 'Al Jazeera: Mali, Burkina Faso ban US citizens (Dec 2025)', url: 'https://www.aljazeera.com/news/2025/12/31/mali-burkina-faso-ban-us-citizens-in-response-to-trump-travel-bans' }],
   },
   {
     slug: 'mauritania', name: 'Mauritania', iso2: 'MR', region: 'West Africa', capital: 'Nouakchott',
@@ -280,7 +296,7 @@ export const countries: Country[] = [
     airports: [{ code: 'NKC', city: 'Nouakchott' }], plugs: ['C'],
     bestTime: 'November to March', malaria: 'some', yellowFever: 'risk', advisory: 'caution',
     highlights: ['Chinguetti', 'Banc d\'Arguin National Park', 'The iron ore train'],
-    visa: same({ type: 'voa', note: 'Apply online before travel; the visa is issued on arrival.' }),
+    visa: same({ type: 'evisa', stay: 'Up to 30 days', note: 'Since 5 January 2025 the eVisa must be obtained before boarding or before crossing a land border.' }),
   },
   {
     slug: 'mauritius', name: 'Mauritius', iso2: 'MU', region: 'East Africa', capital: 'Port Louis',
@@ -296,7 +312,7 @@ export const countries: Country[] = [
     airports: [{ code: 'CMN', city: 'Casablanca' }, { code: 'RAK', city: 'Marrakech' }, { code: 'AGA', city: 'Agadir' }, { code: 'FEZ', city: 'Fès' }], plugs: ['C', 'E'],
     bestTime: 'March to May and September to November', malaria: 'no', yellowFever: 'no', advisory: 'normal',
     highlights: ['Marrakech medina', 'Chefchaouen', 'Erg Chebbi dunes'],
-    visa: same({ type: 'free', stay: 'Up to 90 days', note: 'Your passport must be valid for the length of your stay.' }),
+    visa: same({ type: 'free', stay: 'Up to 90 days', note: 'Stays over 90 days need a residence permit from the local police.' }),
   },
   {
     slug: 'mozambique', name: 'Mozambique', iso2: 'MZ', region: 'Southern Africa', capital: 'Maputo',
@@ -304,7 +320,10 @@ export const countries: Country[] = [
     airports: [{ code: 'MPM', city: 'Maputo' }, { code: 'VNX', city: 'Vilankulo' }, { code: 'POL', city: 'Pemba' }], plugs: ['C', 'F', 'M'],
     bestTime: 'May to November', malaria: 'yes', yellowFever: 'risk', advisory: 'caution',
     highlights: ['Bazaruto Archipelago', 'Tofo whale sharks', 'Island of Mozambique'],
-    visa: same({ type: 'free', stay: 'Up to 30 days', note: 'Tourist stays only. Avoid Cabo Delgado province in the north.' }),
+    portal: 'https://evisa.gov.mz',
+    visa: same({ type: 'eta', stay: 'Up to 30 days', note: 'Visa-exempt, but register an Electronic Travel Authorisation at least 48 hours before travel. A processing fee applies. Avoid Cabo Delgado province.' }),
+    overrides: forEach(BALTIC_PL, { type: 'voa', fee: 'US$50 on arrival', stay: 'Up to 30 days', note: 'Your passport is not on Mozambique\'s visa-waiver list. Apply for an eVisa in advance or buy a visa on arrival. Avoid Cabo Delgado province.' }),
+    sources: [{ label: 'Legit.ng: 29 countries that can enter Mozambique with an ETA', url: 'https://www.legit.ng/people/1730410-full-list-29-countries-citizens-enter-mozambique-using-eta-visa-stay-days/' }, { label: 'Wikipedia: Visa policy of Mozambique', url: 'https://en.wikipedia.org/wiki/Visa_policy_of_Mozambique' }],
   },
   {
     slug: 'namibia', name: 'Namibia', iso2: 'NA', region: 'Southern Africa', capital: 'Windhoek',
@@ -312,8 +331,9 @@ export const countries: Country[] = [
     airports: [{ code: 'WDH', city: 'Windhoek' }], plugs: ['D', 'M'],
     bestTime: 'May to October', malaria: 'some', yellowFever: 'risk', advisory: 'normal', safari: true,
     highlights: ['Etosha National Park', 'Sossusvlei dunes', 'Skeleton Coast'],
-    portal: 'https://eservices.mhaiss.gov.na',
-    visa: same({ type: 'voa', fee: 'N$1,600', stay: 'Up to 90 days', note: 'Available as an eVisa before travel or on arrival at Windhoek airport.' }),
+    portal: 'https://eservices.mhaiss.gov.na/visaonarrival',
+    visa: same({ type: 'voa', fee: 'N$1,600', stay: 'Up to 90 days', note: 'Required since 1 April 2025. Apply online in advance or pay on arrival (about US$90).' }),
+    sources: [{ label: 'CIBTvisas: Namibia new online visa application', url: 'https://cibtvisas.com/blog/nambia-new-online-visa-application' }],
   },
   {
     slug: 'niger', name: 'Niger', iso2: 'NE', region: 'West Africa', capital: 'Niamey',
@@ -321,25 +341,28 @@ export const countries: Country[] = [
     airports: [{ code: 'NIM', city: 'Niamey' }], plugs: ['A', 'B', 'C', 'D', 'E', 'F'],
     bestTime: 'November to February', malaria: 'yes', yellowFever: 'all', advisory: 'avoid',
     highlights: ['Agadez old town', 'Aïr Mountains', 'W National Park'],
-    visa: same({ type: 'embassy' }),
+    visa: { EU: { type: 'embassy' }, UK: { type: 'embassy' }, US: { type: 'none', note: `Niger refuses entry and visas to US citizens. ${US_SUSPENDED_2025}` } },
+    sources: [{ label: 'Fragomen: US citizens banned from entering certain African countries', url: 'https://www.fragomen.com/insights/niger-us-citizens-can-no-longer-enter-or-obtain-visas.html' }],
   },
   {
     slug: 'nigeria', name: 'Nigeria', iso2: 'NG', region: 'West Africa', capital: 'Abuja',
     currency: { code: 'NGN', name: 'Nigerian naira' }, languages: ['English', 'Hausa', 'Yoruba', 'Igbo'],
     airports: [{ code: 'LOS', city: 'Lagos' }, { code: 'ABV', city: 'Abuja' }], plugs: ['D', 'G'],
-    bestTime: 'November to February', malaria: 'yes', yellowFever: 'all', advisory: 'caution',
+    bestTime: 'November to February', malaria: 'yes', yellowFever: 'risk', advisory: 'caution',
     highlights: ['Lagos art and music scene', 'Olumo Rock', 'Yankari National Park'],
     portal: 'https://immigration.gov.ng',
-    visa: same({ type: 'evisa' }),
+    visa: same({ type: 'evisa', stay: 'Up to 30 days', note: 'Apply online; the approved visa is collected on arrival.' }),
   },
   {
     slug: 'rwanda', name: 'Rwanda', iso2: 'RW', region: 'East Africa', capital: 'Kigali',
     currency: { code: 'RWF', name: 'Rwandan franc' }, languages: ['Kinyarwanda', 'English', 'French', 'Swahili'],
     airports: [{ code: 'KGL', city: 'Kigali' }], plugs: ['C', 'J'],
-    bestTime: 'June to September and December to February', malaria: 'some', yellowFever: 'risk', advisory: 'normal', safari: true,
+    bestTime: 'June to September and December to February', malaria: 'yes', yellowFever: 'risk', advisory: 'normal', safari: true,
     highlights: ['Gorilla trekking in Volcanoes National Park', 'Nyungwe Forest', 'Lake Kivu'],
     portal: 'https://irembo.gov.rw',
-    visa: same({ type: 'voa', fee: 'US$50', stay: 'Up to 30 days', note: 'Available online before travel or on arrival. Gorilla permits are booked separately.' }),
+    visa: { EU: { type: 'voa', fee: 'US$50', stay: 'Up to 30 days', note: 'Apply online or get the visa on arrival. Gorilla permits are booked separately.' }, UK: { type: 'free', stay: 'Up to 30 days', note: 'Commonwealth citizens get a free 30-day visa on arrival.' }, US: { type: 'voa', fee: 'US$50', stay: 'Up to 30 days', note: 'Apply online or get the visa on arrival. Gorilla permits are booked separately.' } },
+    overrides: { france: { type: 'free', stay: 'Up to 30 days', note: 'Citizens of La Francophonie member countries get a free 30-day visa on arrival.' } },
+    sources: [{ label: 'Visit Rwanda: Immigration and visas', url: 'https://visitrwanda.com/facts/immigration-visas/' }],
   },
   {
     slug: 'sao-tome-and-principe', name: 'São Tomé and Príncipe', iso2: 'ST', region: 'Central Africa', capital: 'São Tomé',
@@ -364,7 +387,7 @@ export const countries: Country[] = [
     bestTime: 'April to May and October to November', malaria: 'no', yellowFever: 'risk', advisory: 'normal',
     highlights: ['Anse Source d\'Argent', 'Vallée de Mai', 'Aldabra Atoll'],
     portal: 'https://seychelles.govtas.com',
-    visa: same({ type: 'eta', stay: 'Visitor permit issued on arrival', note: 'No visa, but you need an online Travel Authorisation before you fly.' }),
+    visa: same({ type: 'eta', fee: '€10', stay: 'Up to 3 months', note: 'No visa, but apply for a Travel Authorisation up to 30 days before travel and upload your bookings. It is valid for one journey.' }),
   },
   {
     slug: 'sierra-leone', name: 'Sierra Leone', iso2: 'SL', region: 'West Africa', capital: 'Freetown',
@@ -372,7 +395,7 @@ export const countries: Country[] = [
     airports: [{ code: 'FNA', city: 'Freetown' }], plugs: ['D', 'G'],
     bestTime: 'November to April', malaria: 'yes', yellowFever: 'all', advisory: 'normal',
     highlights: ['Tokeh Beach', 'Tiwai Island', 'Banana Islands'],
-    visa: same({ type: 'evisa', note: 'Apply online before travel or arrange a visa on arrival in advance.' }),
+    visa: same({ type: 'voa', stay: 'Up to 30 days', note: 'Apply for an eVisa in advance or get a visa on arrival.' }),
   },
   {
     slug: 'somalia', name: 'Somalia', iso2: 'SO', region: 'East Africa', capital: 'Mogadishu',
@@ -380,7 +403,7 @@ export const countries: Country[] = [
     airports: [{ code: 'MGQ', city: 'Mogadishu' }], plugs: ['C'],
     bestTime: 'December to March', malaria: 'yes', yellowFever: 'risk', advisory: 'avoid',
     highlights: ['Laas Geel rock art', 'Lido Beach, Mogadishu'],
-    visa: same({ type: 'evisa' }),
+    visa: same({ type: 'evisa', stay: 'Up to 30 days', note: 'An approved electronic travel authorisation (eTAS) is required before the journey starts.' }),
   },
   {
     slug: 'south-africa', name: 'South Africa', iso2: 'ZA', region: 'Southern Africa', capital: 'Pretoria',
@@ -388,7 +411,7 @@ export const countries: Country[] = [
     airports: [{ code: 'JNB', city: 'Johannesburg' }, { code: 'CPT', city: 'Cape Town' }, { code: 'DUR', city: 'Durban' }], plugs: ['M', 'N', 'C'],
     bestTime: 'May to September for safari, November to March for the Cape', malaria: 'some', yellowFever: 'risk', advisory: 'normal', safari: true,
     highlights: ['Table Mountain', 'Kruger National Park', 'Garden Route'],
-    visa: same({ type: 'free', stay: 'Up to 90 days', note: 'Your passport needs two blank pages and must be valid 30 days beyond departure.' }),
+    visa: same({ type: 'free', stay: 'Up to 90 days', note: 'Your passport needs at least two blank pages, or you may be refused entry.' }),
   },
   {
     slug: 'south-sudan', name: 'South Sudan', iso2: 'SS', region: 'East Africa', capital: 'Juba',
@@ -396,7 +419,7 @@ export const countries: Country[] = [
     airports: [{ code: 'JUB', city: 'Juba' }], plugs: ['C', 'D'],
     bestTime: 'December to March', malaria: 'yes', yellowFever: 'all', advisory: 'avoid',
     highlights: ['Boma National Park', 'The White Nile at Juba'],
-    visa: same({ type: 'evisa' }),
+    visa: same({ type: 'evisa', fee: 'US$100 (30 days)', note: 'US$100 for 30 days single entry, US$200 for 90 days multiple entry. Print the approval and carry it.' }),
   },
   {
     slug: 'sudan', name: 'Sudan', iso2: 'SD', region: 'North Africa', capital: 'Khartoum',
@@ -404,20 +427,21 @@ export const countries: Country[] = [
     airports: [{ code: 'PZU', city: 'Port Sudan' }], plugs: ['C', 'D'],
     bestTime: 'November to February', malaria: 'yes', yellowFever: 'risk', advisory: 'avoid',
     highlights: ['Pyramids of Meroë', 'Suakin', 'Red Sea reefs'],
-    visa: same({ type: 'embassy' }),
+    visa: same({ type: 'embassy', note: 'Khartoum airport is closed because of the conflict. Registration within 3 days of arrival and an exit visa are required.' }),
   },
   {
     slug: 'tanzania', name: 'Tanzania', iso2: 'TZ', region: 'East Africa', capital: 'Dodoma',
     currency: { code: 'TZS', name: 'Tanzanian shilling' }, languages: ['Swahili', 'English'],
     airports: [{ code: 'DAR', city: 'Dar es Salaam' }, { code: 'JRO', city: 'Kilimanjaro' }, { code: 'ZNZ', city: 'Zanzibar' }], plugs: ['D', 'G'],
-    bestTime: 'June to October', malaria: 'some', yellowFever: 'risk', advisory: 'normal', safari: true,
+    bestTime: 'June to October', malaria: 'yes', yellowFever: 'risk', advisory: 'normal', safari: true,
     highlights: ['Serengeti National Park', 'Mount Kilimanjaro', 'Stone Town, Zanzibar'],
     portal: 'https://visa.immigration.go.tz',
     visa: {
-      EU: { type: 'evisa', fee: 'US$50', stay: 'Up to 90 days', note: 'Apply online before travel. A visa on arrival may also be possible at main airports.' },
-      UK: { type: 'evisa', fee: 'US$50', stay: 'Up to 90 days', note: 'Apply online before travel. A visa on arrival may also be possible at main airports.' },
-      US: { type: 'evisa', fee: 'US$100', stay: 'Up to 90 days', note: 'US citizens receive a multiple-entry visa. Apply online before travel.' },
+      EU: { type: 'evisa', fee: 'US$50', stay: 'Up to 90 days', note: 'Apply online before travel. A visa on arrival is also possible; carry US dollars in recent notes as a backup.' },
+      UK: { type: 'evisa', fee: 'US$50', stay: 'Up to 90 days', note: 'Apply online before travel. A visa on arrival is also possible; carry US dollars in recent notes as a backup.' },
+      US: { type: 'evisa', fee: 'US$100', stay: 'Up to 90 days per visit', note: 'US citizens are issued a one-year multiple-entry visa only.' },
     },
+    sources: [{ label: 'Duma Explorer: Tanzania visa fees 2026', url: 'https://www.dumaexplorer.com/blog/tanzania-safari-visa-guide-fees-requirements' }],
   },
   {
     slug: 'togo', name: 'Togo', iso2: 'TG', region: 'West Africa', capital: 'Lomé',
@@ -426,7 +450,7 @@ export const countries: Country[] = [
     bestTime: 'November to February', malaria: 'yes', yellowFever: 'all', advisory: 'normal',
     highlights: ['Koutammakou (Batammariba houses)', 'Kpalimé hills', 'Lake Togo'],
     portal: 'https://voyage.gouv.tg',
-    visa: same({ type: 'evisa' }),
+    visa: same({ type: 'evisa', stay: 'Up to 15 days' }),
   },
   {
     slug: 'tunisia', name: 'Tunisia', iso2: 'TN', region: 'North Africa', capital: 'Tunis',
@@ -443,7 +467,7 @@ export const countries: Country[] = [
     bestTime: 'June to September and December to February', malaria: 'yes', yellowFever: 'all', advisory: 'normal', safari: true,
     highlights: ['Bwindi Impenetrable Forest', 'Murchison Falls', 'Queen Elizabeth National Park'],
     portal: 'https://visas.immigration.go.ug',
-    visa: same({ type: 'evisa', fee: 'US$50', stay: 'Up to 90 days', note: 'Apply online before travel. Gorilla permits are booked separately.' }),
+    visa: same({ type: 'evisa', fee: 'US$50', stay: 'Up to 90 days', note: 'Apply online at least 2 working days before travel; airlines may refuse boarding without it. The US$100 East Africa Tourist Visa also covers Kenya and Rwanda.' }),
   },
   {
     slug: 'zambia', name: 'Zambia', iso2: 'ZM', region: 'Southern Africa', capital: 'Lusaka',
@@ -451,7 +475,7 @@ export const countries: Country[] = [
     airports: [{ code: 'LUN', city: 'Lusaka' }, { code: 'LVI', city: 'Livingstone' }], plugs: ['C', 'D', 'G'],
     bestTime: 'May to October', malaria: 'yes', yellowFever: 'risk', advisory: 'normal', safari: true,
     highlights: ['Victoria Falls', 'South Luangwa National Park', 'Lower Zambezi'],
-    visa: same({ type: 'free', stay: 'Up to 90 days' }),
+    visa: same({ type: 'free', stay: 'Up to 30 days', note: 'Extendable up to 90 days. To visit Zimbabwe as well, the KAZA UNIVISA covers both countries.' }),
   },
   {
     slug: 'zimbabwe', name: 'Zimbabwe', iso2: 'ZW', region: 'Southern Africa', capital: 'Harare',
@@ -460,8 +484,9 @@ export const countries: Country[] = [
     bestTime: 'May to October', malaria: 'some', yellowFever: 'risk', advisory: 'normal', safari: true,
     highlights: ['Victoria Falls', 'Hwange National Park', 'Great Zimbabwe ruins'],
     portal: 'https://www.evisa.gov.zw',
-    visa: same({ type: 'voa', note: 'Available on arrival or as an eVisa. The KAZA UNIVISA covers Zimbabwe and Zambia on one visa.' }),
+    visa: same({ type: 'voa', stay: 'Up to 30 days', note: 'Get the visa on arrival or apply online about 3 weeks ahead. The KAZA UNIVISA (US$50, 30 days) also covers Zambia.' }),
   },
 ];
 
+export const countries: Country[] = raw.map((c) => ({ ...c, checkedAt: DATA_CHECKED }));
 export const countryBySlug = new Map(countries.map((c) => [c.slug, c]));

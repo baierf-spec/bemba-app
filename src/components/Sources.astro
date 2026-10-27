@@ -1,0 +1,12 @@
+---
+import type { Source } from '../data/types';
+interface Props { items: Source[] }
+const { items } = Astro.props;
+---
+<section class="section" id="sources" aria-labelledby="sources-h">
+  <h2 class="h2" id="sources-h">Sources</h2>
+  <ul class="sources">
+    {items.map((s) => <li><a href={s.url} rel="noopener" target="_blank">{s.label}</a></li>)}
+  </ul>
+  <p style="color:var(--muted);font-size:14px;margin:12px 0 0">Spotted a rule that has changed? Email <span class="mono">hello@bemba.com</span> with a link to the source.</p>
+</section>
