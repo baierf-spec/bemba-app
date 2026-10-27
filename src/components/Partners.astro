@@ -1,0 +1,14 @@
+---
+import { partners } from '../config/site';
+interface Props { country?: string; only?: string[] }
+const { country, only } = Astro.props;
+const list = only ? partners.filter((p) => only.includes(p.id)) : partners;
+---
+{list.map((p) => (
+  <div class="partner">
+    <span class="tag">Partner</span>
+    <h3>{p.title}{country && p.id === 'esim' ? ` in ${country}` : ''}</h3>
+    <p>{p.blurb}</p>
+    <a class="btn ghost" href={p.url} rel="sponsored nofollow noopener" target="_blank">{p.cta} →</a>
+  </div>
+))}

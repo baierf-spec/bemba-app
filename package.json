@@ -1,0 +1,35 @@
+{
+  "name": "bemba",
+  "version": "1.0.0",
+  "description": "bemba.com — entry requirements for travellers to Africa",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy",
+    "db:migrate": "wrangler d1 migrations apply bemba-leads --remote",
+    "check": "astro check"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/baierf-spec/bemba-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/baierf-spec/bemba-app/issues"
+  },
+  "homepage": "https://github.com/baierf-spec/bemba-app#readme",
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^5.18.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261027.1",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.153.0"
+  },
+  "private": true,
+  "type": "module"
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bemba",
+  "main": "worker/index.ts",
+  "compatibility_date": "2025-10-01",
+  "account_id": "59cf79e5a4e2dd1a9a5c3181684c43d7",
+
+  // Static site built by Astro. Only /api/* runs the Worker first;
+  // every other request is served straight from the asset store.
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // Lead storage (safari quote requests, contact form).
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "bemba-leads",
+      "database_id": "108bf214-50e2-4209-910d-b36961a730be",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  "vars": {
+    "SITE_URL": "https://bemba.com"
+  },
+
+  // Secrets (set with `npx wrangler secret put NAME`, never commit them):
+  //   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID  -> lead notifications (optional)
+
+  // Uncomment once bemba.com is added as a zone in this Cloudflare account:
+  // "routes": [
+  //   { "pattern": "bemba.com", "custom_domain": true },
+  //   { "pattern": "www.bemba.com", "custom_domain": true }
+  // ],
+
+  "observability": { "enabled": true }
+}

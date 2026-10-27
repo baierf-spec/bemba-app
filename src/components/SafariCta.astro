@@ -1,0 +1,11 @@
+---
+interface Props { country?: string; slug?: string }
+const { country, slug } = Astro.props;
+const href = slug ? `/safari/?destination=${slug}` : '/safari/';
+---
+<div class="safari-cta">
+  <span class="eyebrow" style="color:inherit;opacity:.7">Safari quotes</span>
+  <h3>{country ? `Planning a safari in ${country}?` : 'Planning a safari?'}</h3>
+  <p>Send one request and get up to three quotes from vetted local operators within 48 hours. Free, no obligation.</p>
+  <a class="btn" href={href}>Request quotes →</a>
+</div>

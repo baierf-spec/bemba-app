@@ -1,0 +1,100 @@
+---
+import '../styles/global.css';
+import { site } from '../config/site';
+
+interface Props {
+  title: string;
+  description: string;
+  jsonLd?: Record<string, unknown>[];
+  noindex?: boolean;
+  ogType?: 'website' | 'article';
+}
+
+const { title, description, jsonLd = [], noindex = false, ogType = 'website' } = Astro.props;
+const canonical = new URL(Astro.url.pathname, site.url).href;
+const fullTitle = title.includes(site.name) ? title : `${title} | ${site.name}`;
+const path = Astro.url.pathname;
+const nav = [
+  { href: '/countries/', label: 'Countries' },
+  { href: '/visa/', label: 'Visa by passport' },
+  { href: '/about/', label: 'How we check' },
+];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0B7A57" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+    {jsonLd.map((d) => <script type="application/ld+json" set:html={JSON.stringify(d)} />)}
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap nav">
+        <a class="logo" href="/" aria-label="Bemba home"><span class="logo-mark" aria-hidden="true"></span>bemba</a>
+        <ul>
+          {nav.map((n) => (
+            <li><a href={n.href} aria-current={path.startsWith(n.href) ? 'page' : undefined}>{n.label}</a></li>
+          ))}
+          <li><a class="btn" href="/safari/">Get safari quotes</a></li>
+        </ul>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap foot-grid">
+        <div>
+          <p><b>bemba.com</b> · {site.tagline}. Information is a guide, not legal or medical advice. Always confirm with official sources before you travel.</p>
+          <p>Some links go to partners (eSIM, insurance, tours). We may earn a commission at no extra cost to you.</p>
+        </div>
+        <nav aria-label="Popular countries">
+          <h2>Popular</h2>
+          <ul>
+            <li><a href="/countries/tanzania/">Tanzania</a></li>
+            <li><a href="/countries/kenya/">Kenya</a></li>
+            <li><a href="/countries/morocco/">Morocco</a></li>
+            <li><a href="/countries/south-africa/">South Africa</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="Passports">
+          <h2>Passports</h2>
+          <ul>
+            <li><a href="/visa/lithuania/">Lithuania</a></li>
+            <li><a href="/visa/poland/">Poland</a></li>
+            <li><a href="/visa/united-kingdom/">United Kingdom</a></li>
+            <li><a href="/visa/united-states/">United States</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="About">
+          <h2>Bemba</h2>
+          <ul>
+            <li><a href="/about/">How we check</a></li>
+            <li><a href="/safari/">Safari quotes</a></li>
+            <li><a href="/disclosure/">Partner disclosure</a></li>
+            <li><a href="/privacy/">Privacy</a></li>
+          </ul>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

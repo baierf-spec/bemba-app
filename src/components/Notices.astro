@@ -1,0 +1,18 @@
+---
+import type { Country } from '../data/types';
+import { advisoryText, isVerified } from '../lib/visa';
+interface Props { country: Country }
+const { country } = Astro.props;
+const adv = advisoryText[country.advisory];
+---
+{adv && (
+  <p class={`notice ${country.advisory === 'avoid' ? 'risk' : ''}`}>
+    <span aria-hidden="true">⚠</span><span><b>Travel advice.</b> {adv}</span>
+  </p>
+)}
+{!isVerified(country) && (
+  <p class="notice">
+    <span aria-hidden="true">ⓘ</span>
+    <span><b>Being verified.</b> We are checking these rules against official sources. Entry rules change often, so confirm with {country.portal ? <a href={country.portal} rel="noopener" target="_blank">the official portal</a> : 'the embassy'} before you book.</span>
+  </p>
+)}

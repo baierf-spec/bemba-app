@@ -1,0 +1,26 @@
+---
+import Base from '../layouts/Base.astro';
+import Crumbs from '../components/Crumbs.astro';
+import { countries } from '../data/countries';
+const verified = countries.filter((c) => c.verifiedAt).length;
+---
+<Base title="How we check entry rules" description="Where Bemba's visa and health information comes from, how often it is checked, and how to report a change.">
+  <div class="wrap narrow">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'How we check', href: '/about/' }]} />
+      <p class="eyebrow">Method</p>
+      <h1 class="h1">How we check entry rules.</h1>
+      <p class="lede">Bemba collects visa, vaccine and arrival rules for all 54 African countries in one place, with a link to the official source.</p>
+    </section>
+    <div class="prose">
+      <h2 class="h2">Sources</h2>
+      <p>We use government immigration portals, official eVisa sites, embassy pages and the World Health Organization's country list for yellow fever. Where a country has an official online portal, we link it on the country page.</p>
+      <h2 class="h2">Verification status</h2>
+      <p>Each country page shows whether its rules have been checked against official sources. Currently {verified} of {countries.length} countries are marked verified. Pages without that mark show a "being verified" notice.</p>
+      <h2 class="h2">Updates</h2>
+      <p>We review every country monthly and whenever a government announces a change. If a rule has changed and we have not caught it yet, email <span class="mono">hello@bemba.com</span> with the country and a link to the source.</p>
+      <h2 class="h2">What Bemba is not</h2>
+      <p>Bemba is a travel guide, not a visa agency, a lawyer or a doctor. We never charge for visas. Apply only on the official portal, and get medical advice from a travel clinic.</p>
+    </div>
+  </div>
+</Base>

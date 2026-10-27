@@ -1,0 +1,32 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import { passports } from '../../data/passports';
+const groups = [
+  { title: 'Baltic and Nordic', slugs: ['lithuania', 'latvia', 'estonia', 'finland', 'sweden'] },
+  { title: 'Central and Western Europe', slugs: ['poland', 'germany', 'netherlands', 'france', 'spain', 'italy', 'ireland'] },
+  { title: 'United Kingdom and United States', slugs: ['united-kingdom', 'united-states'] },
+];
+const by = new Map(passports.map((p) => [p.slug, p]));
+const label = (s: string) => s.replace(/^the /, '').replace(/^./, (x) => x.toUpperCase());
+---
+<Base title="Africa visa requirements by passport" description="Choose your passport to see visa rules for all 54 African countries: visa-free, eVisa, visa on arrival or embassy visa.">
+  <div class="wrap">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'Visa by passport', href: '/visa/' }]} />
+      <p class="eyebrow">{passports.length} passports · 54 countries</p>
+      <h1 class="h1">Visa rules for Africa, by passport.</h1>
+      <p class="lede">Pick the passport you will travel on. Each page lists every African country with the entry type, fee and permitted stay.</p>
+    </section>
+    {groups.map((g) => (
+      <section class="region">
+        <h2>{g.title}</h2>
+        <ul class="c-grid">
+          {g.slugs.map((s) => by.get(s)).filter(Boolean).map((p) => (
+            <li><a href={`/visa/${p!.slug}/`}><b>{label(p!.country)}</b><span class="mono" style="color:var(--muted);font-size:12px">{p!.flag}</span></a></li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+</Base>

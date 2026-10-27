@@ -1,0 +1,425 @@
+---
+import Base from '../layouts/Base.astro';
+import { countries } from '../data/countries';
+import { passports } from '../data/passports';
+import { site } from '../config/site';
+import { visaLabel, visaSub, stampClass, yellowFeverText, visaPath, countryPath } from '../lib/visa';
+
+const sorted = [...countries].sort((a, b) => a.name.localeCompare(b.name));
+const checker = Object.fromEntries(sorted.map((c) => [c.slug, {
+  name: c.name,
+  air: c.airports.map((a) => a.code).join(' · '),
+  yf: c.yellowFever === 'all' ? 'Required for all arrivals' : c.yellowFever === 'risk' ? 'If arriving from a risk country' : 'Not required',
+  visa: Object.fromEntries((['EU', 'UK', 'US'] as const).map((g) => {
+    const r = c.visa[g];
+    return [g, { label: visaLabel[r.type], sub: visaSub[r.type], cls: stampClass[r.type], fee: r.type === 'free' ? 'None' : (r.fee ?? 'Varies'), stay: r.stay ?? 'Set at entry' }];
+  })),
+}]));
+const groups = Object.fromEntries(passports.map((p) => [p.slug, p.group]));
+
+const p = (s: string) => passports.find((x) => x.slug === s)!;
+const c = (s: string) => countries.find((x) => x.slug === s)!;
+const popular = [
+  { code: 'DAR', p: 'lithuania', c: 'tanzania', q: 'Do Lithuanians need a visa for Tanzania?' },
+  { code: 'NBO', p: 'poland', c: 'kenya', q: 'Kenya eTA for Polish citizens' },
+  { code: 'RAK', p: 'germany', c: 'morocco', q: 'Can Germans enter Morocco visa-free?' },
+  { code: 'WDH', p: 'latvia', c: 'namibia', q: 'Namibia visa on arrival for Latvians' },
+  { code: 'CAI', p: 'united-kingdom', c: 'egypt', q: 'Egypt e-Visa or visa on arrival for British travellers' },
+  { code: 'KGL', p: 'united-states', c: 'rwanda', q: 'Rwanda visa for US citizens' },
+  { code: 'CPT', p: 'estonia', c: 'south-africa', q: 'Do Estonians need a visa for South Africa?' },
+  { code: 'EBB', p: 'netherlands', c: 'uganda', q: 'Uganda eVisa for Dutch passport holders' },
+];
+
+const ld = [
+  { '@context': 'https://schema.org', '@type': 'WebSite', name: site.name, url: site.url, description: site.tagline },
+  { '@context': 'https://schema.org', '@type': 'Organization', name: site.name, url: site.url, email: site.email },
+];
+---
+<Base title="Bemba — visa and entry rules for every African country" description="Check visa, vaccine and entry requirements for all 54 African countries by passport. eVisa fees, length of stay, yellow fever rules and safari quotes from local operators." jsonLd={ld}>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">Africa entry atlas · 54 countries</p>
+        <h1>Know the rules <em>before</em> you land.</h1>
+        <p class="lede">Visas, vaccines and entry papers for every African country, checked against your passport in seconds.</p>
+        <ul class="trust">
+          <li><b>54</b> countries</li>
+          <li><b>{passports.length}</b> passports</li>
+          <li>Official portals linked</li>
+        </ul>
+      </div>
+
+      <form class="passport" id="check" aria-labelledby="ppTitle" action="/visa/lithuania/tanzania/" method="get">
+        <div class="pp-head">
+          <h2 id="ppTitle">Entry check</h2>
+          <span class="eyebrow">Being verified</span>
+        </div>
+        <div class="fields">
+          <div class="field">
+            <label for="pass">Passport</label>
+            <select id="pass">
+              {passports.map((x) => <option value={x.slug}>{x.country.replace(/^the /, '').replace(/^./, (s) => s.toUpperCase())}</option>)}
+            </select>
+          </div>
+          <div class="field">
+            <label for="dest">Destination</label>
+            <select id="dest">
+              {sorted.map((x) => <option value={x.slug} selected={x.slug === 'tanzania'}>{x.name}</option>)}
+            </select>
+          </div>
+        </div>
+        <div class="result" aria-live="polite">
+          <span class="stamp s-evisa" id="rStamp">eVisa<small>before travel</small></span>
+          <dl class="facts">
+            <dt>Fee</dt><dd id="rFee">US$50</dd>
+            <dt>Stay</dt><dd id="rStay">Up to 90 days</dd>
+            <dt>Yellow fever</dt><dd id="rYf">If arriving from a risk country</dd>
+            <dt>Airports</dt><dd id="rAir" class="mono">DAR · JRO · ZNZ</dd>
+          </dl>
+        </div>
+        <div class="pp-foot">
+          <p>Entry rules change often. Confirm on the official portal before you book.</p>
+          <a class="btn" id="rLink" href="/visa/lithuania/tanzania/">Full requirements →</a>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <p class="eyebrow">What Bemba does</p>
+          <h2>Everything between booking and boarding.</h2>
+        </div>
+        <p>One page per country and passport, with the papers, vaccines and local partners you need next, and a link to the official source.</p>
+      </div>
+
+      <div class="grid" id="grid">
+        <article class="card c-check" style="--d:0s">
+          <div class="ld" style="--d2:.15s">
+            <p class="eyebrow">Entry checker</p>
+            <h3>Type a country, get every rule.</h3>
+            <p class="desc">Visa type, fee, length of stay and health papers for your passport, in one answer.</p>
+          </div>
+          <div class="vis ld" style="--d2:.3s">
+            <div class="q" aria-hidden="true">
+              <div class="q-field">
+                <span class="q-lab">Going to</span>
+                <span class="q-txt" id="qTxt">Tanzania</span><span class="caret" id="qCaret"></span>
+                <span class="q-from">LT passport</span>
+              </div>
+              <div class="chiprow">
+                <span class="chip on"><i></i>Visa</span>
+                <span class="chip on"><i></i>Health</span>
+                <span class="chip on"><i></i>Entry papers</span>
+              </div>
+              <div class="q-res" id="qRes">
+                <span class="stamp s-evisa" id="qStamp">eVisa</span>
+                <dl class="facts">
+                  <div><dt>Fee</dt><dd id="qFee">US$50</dd></div>
+                  <div><dt>Stay</dt><dd id="qStay">90 days</dd></div>
+                  <div><dt>Arrive</dt><dd id="qAir" class="mono">DAR · JRO</dd></div>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card c-map" style="--d:.09s">
+          <div class="ld" style="--d2:.15s">
+            <p class="eyebrow">Rules watch</p>
+            <h3>54 countries, re-checked every month.</h3>
+            <p class="desc">When a rule changes, the country page updates and the change is logged.</p>
+          </div>
+          <div class="vis ld" style="--d2:.3s">
+            <div class="map-wrap"><canvas id="map" role="img" aria-label="Dot map of Africa coloured by entry type"></canvas></div>
+          </div>
+          <ul class="legend ld" style="--d2:.4s">
+            <li><i style="background:var(--accent)"></i>Visa-free</li>
+            <li><i style="background:var(--gold)"></i>eVisa / on arrival</li>
+            <li><i style="background:var(--stamp)"></i>Embassy visa</li>
+          </ul>
+          <div class="counter ld" style="--d2:.45s"><span>Checked</span><b id="mCount">54 / 54</b></div>
+        </article>
+
+        <article class="card c-vax" style="--d:.18s">
+          <div class="ld" style="--d2:.15s">
+            <p class="eyebrow">Health timeline</p>
+            <h3>Know when to book the clinic.</h3>
+            <p class="desc">Counted back from your departure date.</p>
+          </div>
+          <div class="vis tl ld" style="--d2:.3s">
+            <svg viewBox="0 0 320 150" role="img" aria-label="Vaccine timeline over eight weeks before departure">
+              <g font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--muted)">
+                <text x="10" y="24">8w</text><text x="88" y="24">6w</text><text x="166" y="24">4w</text><text x="244" y="24">2w</text>
+                <text x="286" y="24" fill="var(--accent)">FLY</text>
+              </g>
+              <g stroke="var(--line)" stroke-width="1">
+                <line x1="14" y1="34" x2="14" y2="104"/><line x1="92" y1="34" x2="92" y2="104"/><line x1="170" y1="34" x2="170" y2="104"/><line x1="248" y1="34" x2="248" y2="104"/>
+              </g>
+              <rect id="vBand" x="-22" y="34" width="44" height="70" rx="8" fill="var(--accent-soft)" opacity="0"/>
+              <line x1="14" y1="70" x2="300" y2="70" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
+              <line x1="300" y1="40" x2="300" y2="100" stroke="var(--accent)" stroke-width="2" stroke-dasharray="3 4"/>
+              <g id="vM0" transform="translate(92 70)"><circle r="7" fill="var(--surface)" stroke="var(--gold)" stroke-width="3"/></g>
+              <g id="vM1" transform="translate(248 70)"><circle r="7" fill="var(--surface)" stroke="var(--gold)" stroke-width="3"/></g>
+              <g id="vM2" transform="translate(272 70)"><circle r="7" fill="var(--gold)"/></g>
+              <g font-family="Instrument Sans, sans-serif" font-size="11" fill="var(--ink)" font-weight="500">
+                <text x="92" y="126" text-anchor="middle">Hepatitis A</text>
+                <text x="232" y="126" text-anchor="end">Typhoid</text>
+                <text x="276" y="144" text-anchor="end">Yellow fever · 10 days</text>
+              </g>
+            </svg>
+          </div>
+        </article>
+
+        <article class="card c-safari" style="--d:.27s">
+          <div class="ld" style="--d2:.15s">
+            <p class="eyebrow">Safari quotes</p>
+            <h3>Three local operators, one request.</h3>
+            <p class="desc">Tell us dates and budget. Vetted operators reply within 48 hours. <a href="/safari/">Request quotes →</a></p>
+          </div>
+          <div class="vis ld" style="--d2:.3s">
+            <div class="stack" id="stack" aria-hidden="true"></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="index" id="popular">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <p class="eyebrow">Popular checks</p>
+          <h2>What travellers ask most.</h2>
+        </div>
+        <p><a href="/countries/">All 54 countries →</a></p>
+      </div>
+      <ul class="links">
+        {popular.map((x) => (
+          <li><a href={visaPath(p(x.p), c(x.c))}><span class="code">{x.code}</span><span class="q-t">{x.q}</span><span class="arr">→</span></a></li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="index">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <p class="eyebrow">Safari countries</p>
+          <h2>Where most trips start.</h2>
+        </div>
+      </div>
+      <ul class="chips">
+        {countries.filter((x) => x.safari).map((x) => <li><a href={countryPath(x)}>{x.name}</a></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <style is:global>
+    .hero{padding-block:36px 72px}
+    .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+    .hero-copy{min-width:0}
+    .hero h1{font-family:var(--display);font-weight:800;font-size:clamp(40px,6.2vw,76px);line-height:.98;letter-spacing:-.035em;margin:18px 0 22px;text-wrap:balance}
+    .hero h1 em{font-style:normal;color:var(--accent)}
+    .hero .lede{max-width:34ch;margin:0 0 28px}
+    .trust{display:flex;flex-wrap:wrap;gap:10px 22px;font-family:var(--mono);font-size:13px;color:var(--muted);margin:0;padding:0;list-style:none}
+    .trust b{color:var(--ink);font-weight:500}
+    @media (max-width:880px){.hero-grid{grid-template-columns:1fr;gap:36px}}
+    @media (prefers-reduced-motion:no-preference){
+      .hero-copy>*,.passport{animation:rise .9s var(--e) both}
+      .hero-copy>*:nth-child(2){animation-delay:.08s}.hero-copy>*:nth-child(3){animation-delay:.16s}.hero-copy>*:nth-child(4){animation-delay:.24s}
+      .passport{animation-delay:.3s}
+    }
+    @keyframes rise{from{opacity:0;transform:translateY(12px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+    .passport{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:26px;position:relative;overflow:hidden;box-shadow:0 24px 60px -30px rgba(10,40,30,.35)}
+    .passport::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 14px,var(--accent-soft) 14px 15px);opacity:.45;pointer-events:none}
+    .passport>*{position:relative}
+    .pp-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px dashed var(--line);padding-bottom:14px;margin-bottom:18px}
+    .pp-head h2{font-family:var(--display);font-size:22px;margin:0;letter-spacing:-.01em}
+    .fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .passport .field select{font-weight:500}
+    .result{margin-top:20px;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+    .result .facts{font-size:14px;gap:6px 14px}
+    .pp-foot{margin-top:20px;padding-top:14px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+    .pp-foot p{margin:0;font-size:12px;color:var(--muted);max-width:32ch}
+    @media (max-width:460px){.fields{grid-template-columns:1fr}.result{grid-template-columns:1fr}.result .stamp{justify-self:start}}
+
+    .features{padding-block:24px 80px}
+    .sec-head{display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap;margin-bottom:28px}
+    .sec-head h2{font-family:var(--display);font-weight:700;font-size:clamp(30px,4vw,46px);line-height:1.02;letter-spacing:-.03em;margin:8px 0 0;max-width:18ch;text-wrap:balance}
+    .sec-head p{max-width:40ch;color:var(--muted);margin:0}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+    .card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:18px;overflow:hidden;min-width:0;box-shadow:0 18px 40px -32px rgba(10,40,30,.4)}
+    .card h3{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:-.02em;line-height:1.1;margin:6px 0 6px;text-wrap:balance}
+    .card .desc{margin:0;color:var(--muted);font-size:15px;max-width:44ch}
+    .c-check{grid-column:1/3;grid-row:1}.c-map{grid-column:3;grid-row:1/3}.c-vax{grid-column:1;grid-row:2}.c-safari{grid-column:2;grid-row:2}
+    .vis{margin-top:auto;min-width:0}
+    @media (max-width:960px){.grid{grid-template-columns:1fr 1fr}.c-check{grid-column:1/3;grid-row:auto}.c-map{grid-column:1;grid-row:auto}.c-vax{grid-column:2;grid-row:auto}.c-safari{grid-column:1/3;grid-row:auto}}
+    @media (max-width:640px){.grid{grid-template-columns:1fr}.c-check,.c-map,.c-vax,.c-safari{grid-column:auto}}
+
+    .js .grid .card{opacity:0;transform:translateY(24px) scale(.985);filter:blur(6px);transition:transform .9s var(--e) var(--d),opacity .6s var(--e2) var(--d),filter .75s var(--e2) var(--d)}
+    .js .grid.in .card{opacity:1;transform:none;filter:none}
+    .js .grid .ld{opacity:0;transform:translateY(10px);filter:blur(4px);transition:transform 1.05s var(--e) calc(var(--d) + var(--d2)),opacity .75s var(--e2) calc(var(--d) + var(--d2)),filter .75s var(--e2) calc(var(--d) + var(--d2))}
+    .js .grid.in .ld{opacity:1;transform:none;filter:none}
+
+    .q{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:14px}
+    .q-field{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+    .q-lab{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+    .q-txt{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.01em;white-space:nowrap}
+    .caret{width:2px;height:24px;background:var(--accent);margin-left:-8px;opacity:0}
+    .q-from{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+    .chiprow{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:500;padding:6px 12px 6px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--surface);transition:background .35s var(--e2),color .35s var(--e2),border-color .35s var(--e2)}
+    .chip i{width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;font-style:normal;font-size:10px}
+    .chip.on{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+    .chip.on i::after{content:"✓"}
+    .q-res{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+    .q-res .stamp{min-width:104px;padding:9px 14px;font-size:12px}
+    .q-res .facts{grid-template-columns:repeat(3,auto);column-gap:22px}
+    .q-res .facts div{display:grid;gap:2px}
+    @media (max-width:520px){.q-res .facts{grid-template-columns:1fr 1fr}.q-from{display:none}}
+
+    .map-wrap{position:relative;aspect-ratio:20/21;max-width:100%}
+    .map-wrap canvas{position:absolute;inset:0;width:100%;height:100%}
+    .legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px;color:var(--muted);margin:0;padding:0;list-style:none}
+    .legend li{display:flex;align-items:center;gap:6px}
+    .legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+    .counter{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:13px;border-top:1px dashed var(--line);padding-top:12px}
+    .counter b{font-weight:500;font-variant-numeric:tabular-nums;color:var(--accent)}
+    .tl svg{width:100%;height:auto;display:block;overflow:visible}
+    .stack{position:relative;height:208px;overflow:hidden;border-radius:12px}
+    .req{position:absolute;left:0;right:0;top:0;height:60px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 12px;will-change:transform,opacity,filter}
+    .req b{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .req span{font-size:12px;color:var(--muted);font-family:var(--mono)}
+    .req em{grid-row:1/3;grid-column:2;font-style:normal;font-family:var(--mono);font-size:12px;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:4px 10px;white-space:nowrap}
+    .index{padding-block:8px 64px}
+  </style>
+
+  <script is:inline define:vars={{ CHECKER: checker, GROUPS: groups }}>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduced && 'IntersectionObserver' in window) document.documentElement.classList.add('js');
+  const $ = (id) => document.getElementById(id);
+
+  /* hero checker */
+  function render(){
+    const ps = $('pass').value, ds = $('dest').value, d = CHECKER[ds], v = d.visa[GROUPS[ps]];
+    const st = $('rStamp'); st.className = 'stamp ' + v.cls; st.innerHTML = v.label + '<small>' + v.sub + '</small>';
+    $('rFee').textContent = v.fee; $('rStay').textContent = v.stay; $('rYf').textContent = d.yf; $('rAir').textContent = d.air;
+    const href = '/visa/' + ps + '/' + ds + '/'; $('rLink').href = href; $('check').action = href;
+  }
+  $('pass').addEventListener('change', render); $('dest').addEventListener('change', render);
+  $('check').addEventListener('submit', (e) => { e.preventDefault(); location.href = $('rLink').href; });
+  render();
+
+  /* motion helpers */
+  const io = (t) => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+  const outE = (t) => 1 - Math.pow(1-t, 4);
+  function track(keys, t, ease = io){
+    if (t <= keys[0][0]) return keys[0][1];
+    for (let i = 1; i < keys.length; i++){ const [t1,v1] = keys[i], [t0,v0] = keys[i-1];
+      if (t <= t1){ const k = ease(Math.min(1,(t-t0)/(t1-t0||1))); return v0 + (v1-v0)*k; } }
+    return keys[keys.length-1][1];
+  }
+  const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const cls = { 'Visa-free':'s-free', 'Embassy visa':'s-req' };
+
+  /* card A: prompt story */
+  const Q = ['tanzania','kenya','morocco','namibia','egypt','rwanda'].map((s) => { const d = CHECKER[s], v = d.visa.EU; return { n:d.name, cls:v.cls, l:v.label, fee:v.fee, stay:v.stay.replace(/^Up to /,''), air:d.air.split(' · ').slice(0,2).join(' · ') }; });
+  const qTxt=$('qTxt'), qCaret=$('qCaret'), qRes=$('qRes'), qStamp=$('qStamp'), chips=[...document.querySelectorAll('.c-check .chip')];
+  const QP = 6.6; let qShown = 0;
+  const setRes = (d) => { qStamp.className='stamp '+d.cls; qStamp.textContent=d.l; $('qFee').textContent=d.fee; $('qStay').textContent=d.stay; $('qAir').textContent=d.air; };
+  function storyCheck(t){
+    const n = Math.floor(t/QP), lt = t - n*QP, prev = Q[n % Q.length], next = Q[(n+1) % Q.length];
+    const delS = .8, delE = delS + prev.n.length*.04, typE = delE + .2 + next.n.length*.06;
+    let txt, typing = false;
+    if (lt < delS) txt = prev.n;
+    else if (lt < delE){ txt = prev.n.slice(0, Math.max(0, prev.n.length - Math.floor((lt-delS)/.04) - 1)); typing = true; }
+    else if (lt < delE+.2) txt = '';
+    else if (lt < typE){ txt = next.n.slice(0, Math.floor((lt-delE-.2)/.06)+1); typing = true; }
+    else txt = next.n;
+    if (qTxt.textContent !== txt) qTxt.textContent = txt;
+    qCaret.style.opacity = typing ? 1 : (Math.floor(lt*2) % 2 ? 0 : 1);
+    chips.forEach((c,i) => c.classList.toggle('on', lt < .5 || lt > typE + .3 + i*.32));
+    const showNext = lt > typE + 1.25, idx = showNext ? n+1 : n;
+    if (qShown !== idx){ setRes(showNext ? next : prev); qShown = idx; }
+    const a = lt < typE + 1.25 ? track([[.5,1],[.8,0]], lt) : track([[typE+1.25,0],[typE+2,1]], lt, outE);
+    qRes.style.opacity = a; qRes.style.filter = 'blur(' + ((1-a)*6) + 'px)'; qRes.style.transform = 'translateY(' + ((1-a)*8) + 'px)';
+  }
+  setRes(Q[0]);
+
+  /* card C: dot map */
+  const MASK = ['....XXXXXXXX........','..XXXXXXXXXXXX......','.XXXXXXXXXXXXXX.....','XXXXXXXXXXXXXXXX....','XXXXXXXXXXXXXXXXX...','XXXXXXXXXXXXXXXXXX..','.XXXXXXXXXXXXXXXXXXX','..XXXXXXXXXXXXXXXXXX','....XXXXXXXXXXXXXXX.','.......XXXXXXXXXXX..','........XXXXXXXXXX..','........XXXXXXXXX...','.........XXXXXXXX..X','.........XXXXXXXX.XX','.........XXXXXXX..X.','..........XXXXXX....','..........XXXXX.....','..........XXXX......','...........XX.......'];
+  const dots = [];
+  MASK.forEach((row,y) => [...row].forEach((ch,x) => { if (ch==='X'){ const h=Math.abs(Math.sin(x*12.9898+y*78.233)*43758.5453)%1; dots.push({x,y,k:h<.42?0:h<.82?1:2}); } }));
+  const cv=$('map'), ctx=cv.getContext('2d'), mCount=$('mCount');
+  let pal=[], palAt=-1, running=false;
+  const readPal = () => { pal=[css('--accent'),css('--gold'),css('--stamp')]; };
+  function drawMap(scan){
+    const r = cv.getBoundingClientRect(); if (!r.width) return;
+    const dpr = Math.min(2, devicePixelRatio||1);
+    if (cv.width !== Math.round(r.width*dpr)){ cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr); }
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,r.width,r.height);
+    const cell = Math.min(r.width/20, r.height/19), ox=(r.width-cell*20)/2, oy=(r.height-cell*19)/2, sy = scan < 0 ? -9 : -1.5 + scan*22;
+    for (const d of dots){
+      const cx=ox+(d.x+.5)*cell, cy=oy+(d.y+.5)*cell, near=Math.max(0,1-Math.abs(d.y-sy)/1.6), rad=cell*.3*(1+near*.45);
+      if (near > .05){ ctx.globalAlpha=near*.35; ctx.fillStyle=pal[1]; ctx.beginPath(); ctx.arc(cx,cy,rad*1.9,0,7); ctx.fill(); }
+      ctx.globalAlpha=1; ctx.fillStyle=pal[d.k]; ctx.beginPath(); ctx.arc(cx,cy,rad,0,7); ctx.fill();
+    }
+    if (scan >= 0 && scan <= 1){ const yy=oy+(sy+.5)*cell; ctx.globalAlpha=.55; ctx.strokeStyle=pal[1]; ctx.lineWidth=1.5; ctx.setLineDash([4,5]); ctx.beginPath(); ctx.moveTo(0,yy); ctx.lineTo(r.width,yy); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1; }
+  }
+  const MP = 5.2;
+  function storyMap(t){ const lt=t%MP, p=Math.min(1,lt/2.6); drawMap(lt<2.9?io(p):-1); const n=lt<2.7?Math.round(54*io(p)):54; mCount.textContent=(n<10?'0'+n:n)+' / 54'; }
+
+  /* card B: vaccine timeline */
+  const vBand=$('vBand'), vM=[$('vM0'),$('vM1'),$('vM2')], vX=[92,248,272], VP=4.8;
+  function storyVax(t){
+    const lt=t%VP, x=track([[0,300],[2.6,14]],lt), op=track([[0,0],[.3,1],[2.4,1],[2.9,0]],lt);
+    vBand.setAttribute('x', x-22); vBand.setAttribute('opacity', op);
+    vM.forEach((m,i) => { const b=op*Math.max(0,1-Math.abs(x-vX[i])/34); m.setAttribute('transform','translate('+vX[i]+' 70) scale('+(1+b*.6)+')'); });
+  }
+
+  /* card D: safari request stack */
+  const REQ = [['Serengeti · 5 days','2 adults · Feb','3 quotes'],['Okavango Delta · 4 days','Couple · Jul','2 quotes'],['Masai Mara · 3 days','Family of 4 · Aug','3 quotes'],['Etosha self-drive · 6 days','2 adults · May','3 quotes'],['Bwindi gorilla trek · 3 days','Solo · Sep','2 quotes'],['Kruger · 4 days','Group of 6 · Oct','3 quotes']];
+  const stack=$('stack'), SLOT=72, SP=3.4;
+  const items=[0,1,2,3].map(() => { const el=document.createElement('div'); el.className='req'; el.innerHTML='<b></b><span></span><em></em>'; stack.appendChild(el); return el; });
+  function placeStack(n, p){
+    items.forEach((el,i) => {
+      const base=((i+n)%4)-1, di=((-base-1+n)%REQ.length+REQ.length*4)%REQ.length;
+      if (el._d !== di){ el.children[0].textContent=REQ[di][0]; el.children[1].textContent=REQ[di][1]; el.children[2].textContent=REQ[di][2]; el._d=di; }
+      const pos=base+p, op=pos<0?1+pos:pos>2?Math.max(0,3-pos):1, bl=pos<0?-pos*6:0;
+      el.style.transform='translateY('+(pos*SLOT)+'px) scale('+(pos<0?.97+.03*(1+pos):1)+')'; el.style.opacity=op; el.style.filter=bl?'blur('+bl+'px)':'none';
+    });
+  }
+  const storySafari = (t) => { const n=Math.floor(t/SP), lt=t-n*SP; placeStack(n+1, lt<.9?io(lt/.9):1); };
+
+  readPal(); drawMap(-1); placeStack(1,0);
+  addEventListener('resize', () => { if (!running) drawMap(-1); });
+  const repaint = () => { readPal(); if (!running) drawMap(-1); };
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', repaint);
+  new MutationObserver(repaint).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+  if (reduced || !('IntersectionObserver' in window)) return;
+
+  /* website mode: intro once on scroll, stories only while visible */
+  const grid=$('grid'); let started=false, visible=false, T=0, last=null;
+  const START=1.6, OFF={check:0,map:.6,vax:1.2,safari:1.8};
+  new IntersectionObserver((es) => es.forEach((e) => { visible=e.isIntersecting; if (visible && !started){ started=true; grid.classList.add('in'); } }), { threshold:.3 }).observe(grid);
+  function frame(now){
+    const dt = last==null ? 0 : Math.min(.05,(now-last)/1000); last=now;
+    if (started && visible){
+      T += dt; if (now-palAt > 1000){ readPal(); palAt=now; }
+      const s=T-START; running = s > 0;
+      if (s-OFF.check>0) storyCheck(s-OFF.check);
+      if (s-OFF.map>0) storyMap(s-OFF.map);
+      if (s-OFF.vax>0) storyVax(s-OFF.vax);
+      if (s-OFF.safari>0) storySafari(s-OFF.safari);
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+  </script>
+</Base>

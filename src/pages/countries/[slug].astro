@@ -1,0 +1,115 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import Faq from '../../components/Faq.astro';
+import Notices from '../../components/Notices.astro';
+import Partners from '../../components/Partners.astro';
+import SafariCta from '../../components/SafariCta.astro';
+import { countries } from '../../data/countries';
+import { passports } from '../../data/passports';
+import type { Country, PassportGroup } from '../../data/types';
+import { visaLabel, stampClass, yellowFeverText, malariaText, relatedCountries, visaPath, countryPath } from '../../lib/visa';
+
+export function getStaticPaths() {
+  return countries.map((c) => ({ params: { slug: c.slug }, props: { c } }));
+}
+interface Props { c: Country }
+const { c } = Astro.props;
+
+const groups: { g: PassportGroup; label: string }[] = [
+  { g: 'EU', label: 'EU passports' },
+  { g: 'UK', label: 'UK passport' },
+  { g: 'US', label: 'US passport' },
+];
+const eu = c.visa.EU;
+const title = `${c.name} entry requirements: visa, vaccines and arrival`;
+const description = `${c.name} visa rules for EU, UK and US passports, yellow fever and malaria advice, airports (${c.airports.map((a) => a.code).join(', ')}), currency and the best time to visit.`;
+const faq = [
+  { q: `Do EU citizens need a visa for ${c.name}?`, a: eu.type === 'free' ? `No. EU passport holders can visit ${c.name} visa-free${eu.stay ? ` (${eu.stay.toLowerCase()})` : ''}.` : eu.type === 'eta' ? `No visa, but an online travel authorisation is required before you fly.` : `Yes. EU passport holders need a visa (${visaLabel[eu.type].toLowerCase()})${eu.fee ? `; the fee is ${eu.fee}` : ''}.` },
+  { q: `Is a yellow fever vaccination required for ${c.name}?`, a: yellowFeverText[c.yellowFever] },
+  { q: `Is there malaria in ${c.name}?`, a: malariaText[c.malaria] },
+  { q: `What is the best time to visit ${c.name}?`, a: `${c.bestTime} is generally the best time to visit.` },
+  { q: `What currency is used in ${c.name}?`, a: `The currency is the ${c.currency.name} (${c.currency.code}). Cards work in cities and larger hotels; carry some cash for markets and rural areas.` },
+];
+const ld = {
+  '@context': 'https://schema.org', '@type': 'Article', headline: title, description,
+  about: { '@type': 'Country', name: c.name },
+  publisher: { '@type': 'Organization', name: 'Bemba', url: 'https://bemba.com' },
+};
+const nearby = relatedCountries(c, 8);
+---
+<Base title={title} description={description} jsonLd={[ld]} ogType="article">
+  <div class="wrap">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'Countries', href: '/countries/' }, { name: c.name, href: countryPath(c) }]} />
+      <p class="eyebrow">{c.region} · {c.iso2} · {c.airports.map((a) => a.code).join(' · ')}</p>
+      <h1 class="h1">{c.name} entry requirements</h1>
+      <p class="lede">What you need to enter {c.name}: visa rules by passport, vaccines, arrival airports and practical details for your trip.</p>
+    </section>
+
+    <div class="article">
+      <div>
+        <Notices country={c} />
+
+        <section aria-labelledby="visa-h">
+          <h2 class="h2" id="visa-h">Visa rules by passport</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th scope="col">Passport</th><th scope="col">Entry</th><th scope="col">Fee</th><th scope="col">Stay</th></tr></thead>
+              <tbody>
+                {groups.map(({ g, label }) => { const r = c.visa[g]; return (
+                  <tr>
+                    <td>{label}</td>
+                    <td><span class={`pill ${stampClass[r.type]}`}>{visaLabel[r.type]}</span></td>
+                    <td class="mono">{r.type === 'free' ? '—' : (r.fee ?? 'Varies')}</td>
+                    <td>{r.stay ?? '—'}</td>
+                  </tr>
+                ); })}
+              </tbody>
+            </table>
+          </div>
+          {eu.note && <p style="color:var(--muted);margin-top:12px">{eu.note}</p>}
+          <p class="eyebrow" style="margin:20px 0 10px">Detailed guide for your passport</p>
+          <ul class="chips">
+            {passports.map((p) => <li><a href={visaPath(p, c)}>{p.demonym}</a></li>)}
+          </ul>
+        </section>
+
+        <section class="section prose" aria-labelledby="health-h" style="margin-top:28px">
+          <h2 class="h2" id="health-h">Health and vaccines</h2>
+          <p><b>Yellow fever.</b> {yellowFeverText[c.yellowFever]}</p>
+          <p><b>Malaria.</b> {malariaText[c.malaria]}</p>
+          <p>Routine vaccines should be up to date. Travel clinics commonly also discuss hepatitis A, typhoid and, for longer rural stays, rabies. Book 6 to 8 weeks before departure.</p>
+        </section>
+
+        <section class="section" aria-labelledby="practical-h">
+          <h2 class="h2" id="practical-h">Practical details</h2>
+          <dl class="fact-grid">
+            <div class="fact"><dt>Capital</dt><dd>{c.capital}</dd></div>
+            <div class="fact"><dt>Currency</dt><dd>{c.currency.name} <span class="mono">({c.currency.code})</span></dd></div>
+            <div class="fact"><dt>Languages</dt><dd>{c.languages.join(', ')}</dd></div>
+            <div class="fact"><dt>Plug types</dt><dd>{c.plugs.join(', ')}</dd></div>
+            <div class="fact"><dt>Best time</dt><dd>{c.bestTime}</dd></div>
+            <div class="fact"><dt>Main airports</dt><dd>{c.airports.map((a) => `${a.city} (${a.code})`).join(', ')}</dd></div>
+          </dl>
+        </section>
+
+        <section class="section prose" aria-labelledby="see-h">
+          <h2 class="h2" id="see-h">Highlights of {c.name}</h2>
+          <ul>{c.highlights.map((h) => <li>{h}</li>)}</ul>
+        </section>
+
+        <Faq items={faq} />
+
+        <section class="section" aria-labelledby="near-h">
+          <h2 class="h2" id="near-h">More in {c.region}</h2>
+          <ul class="chips">{nearby.map((n) => <li><a href={countryPath(n)}>{n.name}</a></li>)}</ul>
+        </section>
+      </div>
+      <aside class="aside" aria-label="Plan your trip">
+        {c.safari && <SafariCta country={c.name} slug={c.slug} />}
+        <Partners country={c.name} />
+      </aside>
+    </div>
+  </div>
+</Base>

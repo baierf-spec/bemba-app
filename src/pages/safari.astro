@@ -1,0 +1,123 @@
+---
+import Base from '../layouts/Base.astro';
+import Crumbs from '../components/Crumbs.astro';
+import Faq from '../components/Faq.astro';
+import { countries } from '../data/countries';
+const safari = countries.filter((c) => c.safari).sort((a, b) => a.name.localeCompare(b.name));
+const months = ['Not sure yet', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const faq = [
+  { q: 'Is the quote service free?', a: 'Yes. Requests are free and you are under no obligation to book. Operators pay Bemba a referral fee if you book with them, which never changes your price.' },
+  { q: 'Who are the operators?', a: 'Licensed, locally based safari companies with recent traveller reviews. We send your request to up to three that cover your destination and dates.' },
+  { q: 'How soon will I hear back?', a: 'Most operators reply by email within 48 hours, usually with a draft itinerary and a price per person.' },
+  { q: 'What should I include in my request?', a: 'Your rough dates, number of travellers, budget per person and anything that matters to you: lodges or camping, a beach extension, gorilla permits, children travelling.' },
+];
+---
+<Base title="Safari quotes from local operators" description="Send one request and get up to three safari quotes from vetted local operators in Tanzania, Kenya, Botswana, Namibia, Rwanda, Uganda and more. Free and with no obligation.">
+  <div class="wrap">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'Safari quotes', href: '/safari/' }]} />
+      <p class="eyebrow">Free · no obligation · replies within 48 h</p>
+      <h1 class="h1">One request, three safari quotes.</h1>
+      <p class="lede">Tell us where and when. We pass your request to up to three licensed local operators, and they reply to you directly with an itinerary and a price.</p>
+    </section>
+
+    <div class="article">
+      <div>
+        <form class="form passport-like" id="leadForm" novalidate>
+          <input type="hidden" name="kind" value="safari" />
+          <div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" tabindex="-1" autocomplete="off" /></div>
+          <div class="form-row">
+            <div class="field">
+              <label for="destination">Destination</label>
+              <select id="destination" name="destination">
+                {safari.map((c) => <option value={c.slug}>{c.name}</option>)}
+                <option value="multi">Several countries</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="travel_month">When</label>
+              <select id="travel_month" name="travel_month">{months.map((m) => <option>{m}</option>)}</select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label for="travellers">Travellers</label>
+              <input id="travellers" name="travellers" type="number" min="1" max="50" value="2" inputmode="numeric" />
+            </div>
+            <div class="field">
+              <label for="budget">Budget per person</label>
+              <select id="budget" name="budget">
+                <option>Under US$2,000</option>
+                <option selected>US$2,000–4,000</option>
+                <option>US$4,000–7,000</option>
+                <option>Over US$7,000</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label for="name">Your name</label>
+              <input id="name" name="name" autocomplete="name" />
+            </div>
+            <div class="field">
+              <label for="email">Email (operators reply here)</label>
+              <input id="email" name="email" type="email" autocomplete="email" required />
+            </div>
+          </div>
+          <div class="field">
+            <label for="message">Anything else?</label>
+            <textarea id="message" name="message" placeholder="Lodges or camping, a beach extension, gorilla permits, children travelling…"></textarea>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center">
+            <button class="btn" type="submit" id="leadBtn">Send my request</button>
+            <p class="form-msg" id="leadMsg" role="status"></p>
+          </div>
+          <p class="eyebrow" style="text-transform:none;letter-spacing:0;font-size:12px">By sending, you agree that we share your request with up to three operators. See our <a href="/privacy/">privacy notice</a>.</p>
+        </form>
+
+        <Faq items={faq} />
+      </div>
+      <aside class="aside">
+        <div class="partner">
+          <span class="tag">How it works</span>
+          <h3>From request to reply</h3>
+          <ol style="margin:0;padding-left:20px;font-size:14px;color:var(--muted);display:grid;gap:6px">
+            <li>You send one short request.</li>
+            <li>We match it with up to three operators for that country.</li>
+            <li>They email you itineraries and prices.</li>
+            <li>You compare and book directly with the one you like.</li>
+          </ol>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <style>
+    .passport-like{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px}
+  </style>
+
+  <script is:inline>
+(() => {
+  const f = document.getElementById('leadForm'), msg = document.getElementById('leadMsg'), btn = document.getElementById('leadBtn');
+  const q = new URLSearchParams(location.search).get('destination');
+  if (q) { const o = f.destination.querySelector('option[value="' + q.replace(/[^a-z-]/g, '') + '"]'); if (o) o.selected = true; }
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    msg.className = 'form-msg';
+    if (!f.email.value || !f.email.checkValidity()) { msg.className = 'form-msg err'; msg.textContent = 'Enter a valid email address so operators can reply.'; f.email.focus(); return; }
+    btn.disabled = true; btn.textContent = 'Sending…';
+    const data = Object.fromEntries(new FormData(f).entries());
+    data.page = location.pathname + location.search;
+    try {
+      const r = await fetch('/api/lead', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) throw new Error(j.error || 'The request could not be sent.');
+      location.href = '/safari/thanks/';
+    } catch (err) {
+      msg.className = 'form-msg err'; msg.textContent = err.message + ' You can also email hello@bemba.com.';
+      btn.disabled = false; btn.textContent = 'Send my request';
+    }
+  });
+})();
+  </script>
+</Base>

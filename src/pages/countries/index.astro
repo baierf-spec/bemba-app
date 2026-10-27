@@ -1,0 +1,28 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import { countries } from '../../data/countries';
+import type { Region } from '../../data/types';
+import { countryPath } from '../../lib/visa';
+const regions: Region[] = ['North Africa', 'West Africa', 'Central Africa', 'East Africa', 'Southern Africa'];
+---
+<Base title="Entry requirements for all 54 African countries" description="Visa, vaccine and entry rules for every country in Africa, grouped by region. Airports, currency, plugs and the best time to visit.">
+  <div class="wrap">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'Countries', href: '/countries/' }]} />
+      <p class="eyebrow">54 countries · 5 regions</p>
+      <h1 class="h1">Every African country, one rulebook.</h1>
+      <p class="lede">Choose a country for its visa rules by passport, health requirements, main airports and practical details.</p>
+    </section>
+    {regions.map((r) => (
+      <section class="region" id={r.toLowerCase().replace(/\s/g, '-')}>
+        <h2>{r}</h2>
+        <ul class="c-grid">
+          {countries.filter((c) => c.region === r).sort((a, b) => a.name.localeCompare(b.name)).map((c) => (
+            <li><a href={countryPath(c)}><b>{c.name}</b><span class="mono" style="color:var(--muted);font-size:12px">{c.airports[0].code}</span></a></li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+</Base>

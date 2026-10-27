@@ -1,0 +1,152 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Crumbs from '../../../components/Crumbs.astro';
+import Faq from '../../../components/Faq.astro';
+import Notices from '../../../components/Notices.astro';
+import Partners from '../../../components/Partners.astro';
+import SafariCta from '../../../components/SafariCta.astro';
+import { countries } from '../../../data/countries';
+import { passports } from '../../../data/passports';
+import type { Country } from '../../../data/types';
+import type { Passport } from '../../../data/passports';
+import {
+  rule, shortAnswer, applySteps, visaLabel, visaSub, stampClass, needsVisa,
+  yellowFeverText, malariaText, relatedCountries, otherPassports, visaPath, countryPath,
+} from '../../../lib/visa';
+
+export function getStaticPaths() {
+  return passports.flatMap((p) => countries.map((c) => ({ params: { passport: p.slug, country: c.slug }, props: { p, c } })));
+}
+
+interface Props { p: Passport; c: Country }
+const { p, c } = Astro.props;
+const r = rule(c, p);
+const answer = shortAnswer(c, p);
+const steps = applySteps(c, r);
+const yes = needsVisa(r.type);
+
+const title = `Do ${p.demonym} citizens need a visa for ${c.name}?`;
+const description = `${answer} Fees, length of stay, yellow fever rules and how to apply for ${p.demonym} passport holders.`;
+
+const faq = [
+  { q: title, a: answer },
+  {
+    q: `How long can ${p.demonym} citizens stay in ${c.name}?`,
+    a: r.stay ? `${r.stay} for tourism. Overstaying can lead to fines and future entry bans.` : `The permitted stay is set when your ${r.type === 'free' ? 'entry stamp' : 'visa'} is issued. Check the date on it and do not overstay.`,
+  },
+  {
+    q: `Do I need a yellow fever certificate for ${c.name}?`,
+    a: yellowFeverText[c.yellowFever],
+  },
+  {
+    q: `How much does the ${c.name} visa cost for ${p.demonym} passport holders?`,
+    a: r.type === 'free' ? 'There is no visa fee for tourist stays.' : r.fee ? `The fee is ${r.fee}. Pay only on the official government portal or at the border.` : 'Fees vary by visa length and entry type. The official portal shows the current price before you pay.',
+  },
+  {
+    q: `Which airports do flights to ${c.name} arrive at?`,
+    a: `Most international flights land at ${c.airports.map((a) => `${a.city} (${a.code})`).join(', ')}.`,
+  },
+];
+
+const article = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: title,
+  description,
+  about: { '@type': 'Country', name: c.name },
+  publisher: { '@type': 'Organization', name: 'Bemba', url: 'https://bemba.com' },
+  ...(c.verifiedAt ? { dateModified: c.verifiedAt } : {}),
+};
+
+const neighbours = relatedCountries(c);
+const others = otherPassports(p);
+---
+<Base title={title} description={description} jsonLd={[article]} ogType="article">
+  <div class="wrap">
+    <section class="page-head">
+      <Crumbs items={[{ name: 'Visa by passport', href: '/visa/' }, { name: p.country.replace(/^the /, '').replace(/^./, (s) => s.toUpperCase()), href: `/visa/${p.slug}/` }, { name: c.name, href: visaPath(p, c) }]} />
+      <p class="eyebrow">{c.region} · {p.flag} passport</p>
+      <h1 class="h1">{title}</h1>
+    </section>
+
+    <div class="article">
+      <div>
+        <Notices country={c} />
+
+        <div class="answer">
+          <span class={`stamp ${stampClass[r.type]}`}>{visaLabel[r.type]}<small>{visaSub[r.type]}</small></span>
+          <div>
+            <p>{answer}</p>
+            {r.note && <p style="font-size:15px;font-weight:400;color:var(--muted);margin-top:8px">{r.note}</p>}
+          </div>
+        </div>
+
+        <section class="section" aria-labelledby="at-a-glance" style="border-top:0">
+          <h2 class="h2" id="at-a-glance">At a glance</h2>
+          <dl class="fact-grid">
+            <div class="fact"><dt>Visa required</dt><dd>{yes ? (r.type === 'eta' ? 'No, but an online authorisation is' : 'Yes') : 'No'}</dd></div>
+            <div class="fact"><dt>Type</dt><dd>{visaLabel[r.type]}</dd></div>
+            <div class="fact"><dt>Fee</dt><dd>{r.type === 'free' ? 'None' : (r.fee ?? 'Varies, see official portal')}</dd></div>
+            <div class="fact"><dt>Stay</dt><dd>{r.stay ?? 'Set at entry'}</dd></div>
+            <div class="fact"><dt>Yellow fever</dt><dd>{c.yellowFever === 'all' ? 'Certificate required' : c.yellowFever === 'risk' ? 'If arriving from a risk country' : 'Not required'}</dd></div>
+            <div class="fact"><dt>Arrive at</dt><dd class="mono">{c.airports.map((a) => a.code).join(' · ')}</dd></div>
+          </dl>
+        </section>
+
+        <section class="section prose" aria-labelledby="how">
+          <h2 class="h2" id="how">{r.type === 'free' ? `Entering ${c.name} without a visa` : `How to get your ${c.name} ${visaLabel[r.type].toLowerCase()}`}</h2>
+          <ol>{steps.map((s) => <li>{s}</li>)}</ol>
+          {c.portal && r.type !== 'free' && (
+            <p><a class="btn ghost" href={c.portal} rel="noopener" target="_blank">Official {c.name} portal →</a></p>
+          )}
+          {p.group === 'EU' && (
+            <p>These rules usually apply to all EU passports in the same way. A few countries treat individual nationalities differently, so check your own passport if you hold dual citizenship.</p>
+          )}
+        </section>
+
+        <section class="section prose" aria-labelledby="health">
+          <h2 class="h2" id="health">Health requirements</h2>
+          <p><b>Yellow fever.</b> {yellowFeverText[c.yellowFever]}</p>
+          <p><b>Malaria.</b> {malariaText[c.malaria]}</p>
+          <p>Book a travel clinic visit 6 to 8 weeks before departure. Some vaccines, including yellow fever, must be given at least 10 days before you arrive.</p>
+        </section>
+
+        <section class="section" aria-labelledby="practical">
+          <h2 class="h2" id="practical">On arrival in {c.name}</h2>
+          <dl class="facts">
+            <dt>Capital</dt><dd>{c.capital}</dd>
+            <dt>Currency</dt><dd>{c.currency.name} ({c.currency.code})</dd>
+            <dt>Languages</dt><dd>{c.languages.join(', ')}</dd>
+            <dt>Plugs</dt><dd>Type {c.plugs.join(', ')}</dd>
+            <dt>Best time</dt><dd>{c.bestTime}</dd>
+            <dt>Airports</dt><dd>{c.airports.map((a) => `${a.city} (${a.code})`).join(', ')}</dd>
+          </dl>
+          <p style="margin-top:18px"><a href={countryPath(c)}>Full {c.name} travel requirements →</a></p>
+        </section>
+
+        <Faq items={faq} />
+
+        <section class="section" aria-labelledby="more-passports">
+          <h2 class="h2" id="more-passports">{c.name} visa rules for other passports</h2>
+          <ul class="chips">
+            {others.map((o) => <li><a href={visaPath(o, c)}>{o.demonym}</a></li>)}
+          </ul>
+        </section>
+
+        <section class="section" aria-labelledby="nearby">
+          <h2 class="h2" id="nearby">{p.demonym} visa rules for nearby countries</h2>
+          <ul class="links">
+            {neighbours.map((n) => (
+              <li><a href={visaPath(p, n)}><span class="code">{n.airports[0].code}</span><span class="q-t">{n.name}</span><span class={`pill ${stampClass[rule(n, p).type]}`}>{visaLabel[rule(n, p).type]}</span></a></li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      <aside class="aside" aria-label="Plan your trip">
+        {c.safari && <SafariCta country={c.name} slug={c.slug} />}
+        <Partners country={c.name} only={['esim', 'insurance']} />
+      </aside>
+    </div>
+  </div>
+</Base>
