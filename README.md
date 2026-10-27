@@ -46,7 +46,8 @@ npx wrangler d1 migrations apply bemba-leads --local   # pirmą kartą prieš pr
 Jau sukurta tavo paskyroje:
 
 - **D1 duomenų bazė** `bemba-leads` (`108bf214-50e2-4209-910d-b36961a730be`) su lentele `leads`.
-- Worker vardas: `bemba` → pirmas adresas bus `https://bemba.baier-f.workers.dev`.
+- Worker `bemba-app`, prijungtas prie **https://bemba.com** ir **www.bemba.com** (www → 301 į bemba.com per zonos redirect taisyklę).
+- D1 migracija `0001_leads.sql` pažymėta kaip pritaikyta (`d1_migrations`).
 
 ### Įkėlimas (rekomenduojama: Workers Builds, be tokenų)
 
@@ -59,8 +60,7 @@ Alternatyva: GitHub Actions (`.github/workflows/ci.yml`). Nustatyk repo kintamą
 
 ### Domenas bemba.com
 
-1. Cloudflare → **Add a site** → `bemba.com`, pakeisk nameserverius pas registratorių.
-2. `wrangler.jsonc` atkomentuok `routes` bloką ir padaryk push.
+Prijungtas. Seni A įrašai (185.158.133.1) ištrinti, jų vietą užėmė Worker custom domains.
 
 ### Telegram pranešimai apie naujus leadus (nebūtina)
 

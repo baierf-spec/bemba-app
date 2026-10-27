@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "bemba",
+  "name": "bemba-app",
   "main": "worker/index.ts",
   "compatibility_date": "2025-10-01",
   "account_id": "59cf79e5a4e2dd1a9a5c3181684c43d7",
@@ -32,11 +32,11 @@
   // Secrets (set with `npx wrangler secret put NAME`, never commit them):
   //   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID  -> lead notifications (optional)
 
-  // Uncomment once bemba.com is added as a zone in this Cloudflare account:
-  // "routes": [
-  //   { "pattern": "bemba.com", "custom_domain": true },
-  //   { "pattern": "www.bemba.com", "custom_domain": true }
-  // ],
+  // Custom domains. www.bemba.com is 301-redirected to bemba.com by a zone redirect rule.
+  "routes": [
+    { "pattern": "bemba.com", "custom_domain": true },
+    { "pattern": "www.bemba.com", "custom_domain": true }
+  ],
 
   "observability": { "enabled": true }
 }
